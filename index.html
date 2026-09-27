@@ -1151,7 +1151,6 @@
 
                     if (card.revealed) {
                         let enemyExtraTag = '';
-                        // Potere passivo del Re (valore 10) in Modalità Difficile: +1 se dello stesso seme del Re
                         if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
                             enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
                         }
@@ -1240,7 +1239,7 @@
             let requiredGold = (mode === 'Difficile') ? vce * 2 : vce;
 
             if (selectedVal === 0) {
-                log('Seleziona le carte Oro nella casella Oro prima di toccare la carta Spade!');
+                log('Seleziona le carte Oro prima di toccare l\'Evento per Pagarlo/Corromperlo, OPPURE tocca la casella Nemici per combattere!');
                 return;
             }
 
@@ -1288,7 +1287,7 @@
                     }
                 });
             } else {
-                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro o combatti il Nemico!`);
+                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro o tocca la casella Nemici per combattere!`);
             }
         }
 
@@ -1428,14 +1427,12 @@
             } else if (cartaEventoCorrente.suit === SUITS.SPADE) {
                 let totalGoldAvailable = getTotalGold();
                 setDiceEnabled(false);
+                canDrawEvent = false;
 
                 if (totalGoldAvailable < requiredGold) {
-                    log(`Nemico ingaggiato! Oro insufficiente. Inizia il combattimento!`);
-                    canDrawEvent = false;
-                    startCombat();
+                    log(`Evento Spade! Oro insufficiente per evitarlo. Tocca la casella Nemici per iniziare il combattimento!`);
                 } else {
-                    log(`Nemico avvistato! Seleziona l'Oro e tocca la carta Spade per Pagarlo/Corromperlo, OPPURE tocca il Mazzo Nemici per combattere.`);
-                    canDrawEvent = false;
+                    log(`Nemico avvistato! Seleziona l'Oro e tocca la carta Spade per Pagarlo/Corromperlo, OPPURE tocca la casella Nemici per combattere.`);
                 }
             } else {
                 log(`Tocca il DADO per il Test OPPURE seleziona Carte Oro e tocca l'Evento per superarlo senza rischi (Costo: ${requiredGold} Oro).`);
@@ -1646,7 +1643,6 @@
 
                     let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
                     
-                    // Potere Passivo Re (Valore 10) in Modalità Difficile: +1 se dello stesso seme del Re
                     let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
                     let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
 
