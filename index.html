@@ -1236,18 +1236,16 @@
 
             let selectedVal = getSelectedGoldValue();
             let vce = cartaEventoCorrente.value;
-            let requiredGold = (mode === 'Difficile') ? vce * 2 : vce;
+            let bypassCost = vce; 
+            let bribeCost = (mode === 'Difficile') ? vce * 2 : vce;
 
             if (selectedVal === 0) {
                 log('Seleziona le carte Oro prima di toccare l\'Evento per Pagarlo/Corromperlo, OPPURE tocca la casella Nemici per combattere!');
                 return;
             }
 
-            if (selectedVal === requiredGold) {
-                log(`Hai pagato l'Oro esatto (${selectedVal})! Eviti il combattimento.`);
-                payGoldSelectedAndDiscard(() => { endTurn(true); });
-            } else if (selectedVal > requiredGold) {
-                log(`Oro selezionato (${selectedVal}) > costo (${requiredGold}). Tentativo di CORRUZIONE!`);
+            if (selectedVal >= bribeCost) {
+                log(`Oro selezionato (${selectedVal}) >= costo Corruzione (${bribeCost}). Tentativo di CORRUZIONE!`);
                 payGoldSelectedAndDiscard(() => {
                     if (mazzoPersonaggi.length === 0) {
                         log('Nessun nemico rimasto!');
@@ -1286,8 +1284,11 @@
                         });
                     }
                 });
+            } else if (selectedVal >= bypassCost) {
+                log(`Hai pagato l'Oro sufficiente (${selectedVal})! Eviti l'evento e il combattimento.`);
+                payGoldSelectedAndDiscard(() => { endTurn(true); });
             } else {
-                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro o tocca la casella Nemici per combattere!`);
+                log(`Oro insufficiente (${selectedVal}/${bypassCost}). Seleziona più Oro o tocca la casella Nemici per combattere!`);
             }
         }
 
@@ -1297,7 +1298,7 @@
 
             let selectedVal = getSelectedGoldValue();
             let vce = cartaEventoCorrente.value;
-            let requiredGold = (mode === 'Difficile') ? vce * 2 : vce;
+            let requiredGold = vce;
 
             if (selectedVal === 0) {
                 log('Seleziona prima le carte Oro nella casella Oro, poi tocca l\'Evento per risolverlo con l\'Oro oppure lancia il Dado!');
@@ -1416,9 +1417,8 @@
             
             log(`Evento pescato dal Mazzo Dungeon: ${cartaEventoCorrente.value} di ${cartaEventoCorrente.suit}`);
 
-            let requiredGold = (mode === 'Difficile') 
-                ? cartaEventoCorrente.value * 2 
-                : cartaEventoCorrente.value;
+            let requiredGold = cartaEventoCorrente.value;
+            let bribeGold = (mode === 'Difficile') ? cartaEventoCorrente.value * 2 : cartaEventoCorrente.value;
 
             if (cartaEventoCorrente.suit === SUITS.DENARI) {
                 log(`Trovata Carta Oro! Tocca la carta Denari lampeggiante negli Eventi per portarla nell'Oro.`);
@@ -1429,8 +1429,8 @@
                 setDiceEnabled(false);
                 canDrawEvent = false;
 
-                if (totalGoldAvailable < requiredGold) {
-                    log(`Evento Spade! Oro insufficiente per evitarlo. Tocca la casella Nemici per iniziare il combattimento!`);
+                if (mode === 'Difficile') {
+                    log(`Nemico avvistato! Paga ${requiredGold} Oro per evitarlo, o ${bribeGold} Oro per tentare di Corromperlo. Oppure tocca la casella Nemici per combattere.`);
                 } else {
                     log(`Nemico avvistato! Seleziona l'Oro e tocca la carta Spade per Pagarlo/Corromperlo, OPPURE tocca la casella Nemici per combattere.`);
                 }
