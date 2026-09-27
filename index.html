@@ -443,20 +443,21 @@
             text-align: center;
         }
 
-        .defeat-overlay {
+        .defeat-overlay, .victory-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.88);
+            background: rgba(0, 0, 0, 0.92);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 100;
             border-radius: 8px;
-            animation: fadeIn 0.3s ease-in-out;
+            animation: fadeIn 0.4s ease-in-out;
+            padding: 10px;
         }
 
         .defeat-title {
@@ -466,6 +467,39 @@
             letter-spacing: 2px;
             font-weight: bold;
             text-shadow: 0 0 10px #ff0000;
+            margin-bottom: 8px;
+        }
+
+        .victory-title {
+            font-size: 1.8rem;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-shadow: 0 0 12px #ff8c00;
+            margin-bottom: 6px;
+        }
+
+        .victory-subtitle {
+            font-size: 0.8rem;
+            color: #d9a05b;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .trophy-section-title {
+            font-size: 0.65rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+
+        .trophies-container {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
             margin-bottom: 8px;
         }
 
@@ -568,10 +602,25 @@
 
         <div class="slot"><span class="slot-title">10. Mazzo Reliquie</span><div id="deck-relics" class="card-container"></div></div>
         
+        <!-- OVERLAY SCONFITTA -->
         <div id="defeat-overlay" class="defeat-overlay" style="display: none;">
             <div class="defeat-title">☠ SCONFITTA ☠</div>
             <div class="defeat-msg">Il tuo Eroe è caduto nel Dungeon!</div>
             <button onclick="initGame()" class="header-btn btn-action" style="padding: 8px 16px; font-size: 0.8rem;">Inizia Nuova Partita</button>
+        </div>
+
+        <!-- OVERLAY VITTORIA -->
+        <div id="victory-overlay" class="victory-overlay" style="display: none;">
+            <div class="victory-title">🏆 VITTORIA! 🏆</div>
+            <div class="victory-subtitle">Hai conquistato il Dungeon e sconfitto i 4 Re!</div>
+            
+            <div class="trophy-section-title">✨ Reliquie Conquistate ✨</div>
+            <div id="victory-relics" class="trophies-container"></div>
+
+            <div class="trophy-section-title">👑 Re Sconfitti 👑</div>
+            <div id="victory-kings" class="trophies-container"></div>
+
+            <button onclick="initGame()" class="header-btn btn-action" style="padding: 8px 16px; font-size: 0.85rem; margin-top: 10px;">Nuova Partita</button>
         </div>
     </div>
 
@@ -681,6 +730,7 @@
 
         function initGame() {
             document.getElementById('defeat-overlay').style.display = 'none';
+            document.getElementById('victory-overlay').style.display = 'none';
             document.getElementById('log').innerHTML = '';
             
             let diceBox = document.getElementById('dice-box');
@@ -1389,7 +1439,6 @@
                     
                     let relicBonus = reliquieOttenute.filter(r => r.suit === chosenSuit).length;
                     
-                    // SUPPORTO PER AIUTI MULTIPLI DELLO STESSO SEME
                     let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
                     let matchingAids = selectedAids.filter(a => a.suit === chosenSuit);
                     let aidBonus = matchingAids.length;
@@ -1506,7 +1555,7 @@
                     carteAzioneNemico = [];
                 }
 
-                checkWinCondition();
+                if (checkWinCondition()) return;
 
                 fasePostCombattimento = true;
                 carteSelezionateEroe = [];
@@ -1537,13 +1586,40 @@
         }
 
         function checkWinCondition() {
+            let won = false;
             if (mode === 'Facile' && reliquieOttenute.length >= 4) {
-                log('🏆 VITTORIA! Hai collezionato le 4 Reliquie!');
-                canDrawEvent = false;
+                won = true;
             } else if (mode === 'Difficile' && nemiciSconfittiTotali >= 11) {
-                log('🏆 VITTORIA TOTALE! Hai eliminato tutti i nemici!');
-                canDrawEvent = false;
+                won = true;
             }
+
+            if (won) {
+                log('🏆 VITTORIA COMPLETA! Hai conquistato tutte le Reliquie!');
+                showVictoryOverlay();
+                canDrawEvent = false;
+                setDiceEnabled(false);
+                return true;
+            }
+            return false;
+        }
+
+        function showVictoryOverlay() {
+            let relicContainer = document.getElementById('victory-relics');
+            let kingContainer = document.getElementById('victory-kings');
+
+            relicContainer.innerHTML = '';
+            kingContainer.innerHTML = '';
+
+            reliquieOttenute.forEach(rel => {
+                relicContainer.innerHTML += renderCardHTML(rel);
+            });
+
+            let kings = catacomba.filter(c => c.value === 10);
+            kings.forEach(king => {
+                kingContainer.innerHTML += renderCardHTML(king);
+            });
+
+            document.getElementById('victory-overlay').style.display = 'flex';
         }
 
         function endTurn(keepEventInPile = true) {
