@@ -484,6 +484,11 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
+        .enemy-bonus-tag {
+            background: #ff3333;
+            color: #fff;
+        }
+
         .span-2 { grid-column: span 2; }
 
         .dice-slot {
@@ -1141,12 +1146,16 @@
             if (inCombattimento) {
                 carteAzioneNemico.forEach((card, index) => {
                     let isTopTargetCard = (index === carteAzioneNemico.length - 1);
-                    // Abilita l'animazione e la cliccabilità se ci sono carte eroe selezionate OPPURE se l'eroe non ha più carte azione con cui rispondere
                     let isClickableClass = (isTopTargetCard && (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0)) ? 'clickable-enemy-card' : '';
                     let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
 
                     if (card.revealed) {
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', '', isClickableClass, cardElementId);
+                        let enemyExtraTag = '';
+                        // Potere passivo del Re (valore 10) in Modalità Difficile: +1 se dello stesso seme del Re
+                        if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
+                            enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
+                        }
+                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId);
                     } else {
                         enemyActHTML += renderCardBackHTML('Nemico', '', true);
                     }
@@ -1592,7 +1601,6 @@
         function handleEnemyCardClick() {
             if (!inCombattimento || isAnimating) return;
 
-            // Se l'eroe ha carte azione ma non ne ha selezionata alcuna, avvisa l'utente
             if (carteAzioneEroe.length > 0 && carteSelezionateEroe.length === 0) {
                 log('Seleziona prima una tua Carta Azione Eroe da giocare!');
                 return;
@@ -1637,6 +1645,8 @@
                     carteAiutoSelezionate = [];
 
                     let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
+                    
+                    // Potere Passivo Re (Valore 10) in Modalità Difficile: +1 se dello stesso seme del Re
                     let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
                     let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
 
@@ -1645,7 +1655,7 @@
                     } else {
                         log(`L'Eroe non ha carte da giocare ed incassa il colpo del Nemico!`);
                     }
-                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue})`);
+                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue}${enemyBonus ? ' +1 Potere Re' : ''})`);
 
                     resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
 
@@ -1663,7 +1673,6 @@
         }
 
         function resolveCombatExchange(hSuit, hVal, eSuit, eVal) {
-            // Caso in cui l'Eroe non ha potuto giocare alcuna carta
             if (!hSuit) {
                 if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
                     hero.hp -= eVal;
