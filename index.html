@@ -336,9 +336,9 @@
             border-radius: 4px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 2px;
+            padding: 4px 2px;
             pointer-events: none;
         }
 
@@ -348,12 +348,18 @@
             font-weight: bold;
             letter-spacing: 0.5px;
             line-height: 1.1;
+            margin-top: auto;
+            margin-bottom: auto;
         }
 
         .card-back-count {
-            font-size: 0.55rem;
-            margin-top: 2px;
+            font-size: 0.62rem;
+            font-weight: bold;
             opacity: 0.9;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .enemy-back .card-back-pattern {
@@ -649,7 +655,7 @@
     <div class="board" id="game-board">
         <!-- RIGA 1 -->
         <div class="slot" onclick="handleDungeonDeckClick()"><span class="slot-title">Dungeon</span><div id="deck-dungeon" class="card-container"></div></div>
-        <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">Eventi Pila</span><div id="card-event" class="card-container"></div></div>
+        <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">Evento</span><div id="card-event" class="card-container"></div></div>
         <div class="slot" onclick="handleEnemyDeckClick()"><span class="slot-title">Nemici</span><div id="deck-characters" class="card-container"></div></div>
         <div class="slot"><span class="slot-title">Catacomba</span><div id="slot-catacomb" class="card-container"></div></div>
 
@@ -756,10 +762,10 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        // Funzione aggiornata per mostrare "Ruba Dungeon" sul dorso di tutte le carte coperte
+        // Funzione per il rendering del dorso della carta con contatore posizionato in basso
         function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '') {
             let backClass = isEnemy ? 'enemy-back' : 'back';
-            let subText = countText ? `<div class="card-back-count">(${countText})</div>` : '';
+            let subText = countText ? `<div class="card-back-count">${countText}</div>` : '';
             return `
                 <div class="card ${backClass} ${extraClasses}">
                     <div class="card-back-pattern">
@@ -804,7 +810,7 @@
                     log('Nessuna carta rimasta per ricostruire il Mazzo Dungeon!');
                     return false;
                 }
-                log('Mazzo Dungeon esaurito! Rimescolo la Pila Eventi...');
+                log('Mazzo Dungeon esaurito! Rimescolo le carte Evento...');
                 mazzoDungeon = [...carteEventoPila];
                 carteEventoPila = [];
                 shuffle(mazzoDungeon);
@@ -1248,7 +1254,7 @@
 
             if (fasePostCombattimento) {
                 if (carteSelezionateEroe.length > 0) {
-                    log('Hai carte azione selezionate! Tocca la casella "Eventi Pila" per scartarle, oppure deselezionale prima di proseguire.');
+                    log('Hai carte azione selezionate! Tocca la casella "Evento" per scartarle, oppure deselezionale prima di proseguire.');
                     return;
                 }
                 fasePostCombattimento = false;
@@ -1647,7 +1653,7 @@
 
                 fasePostCombattimento = true;
                 carteSelezionateEroe = [];
-                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "Eventi Pila". Per proseguire senza scarti (o dopo lo scarto), tocca "Dungeon".`);
+                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "Evento". Per proseguire senza scarti (o dopo lo scarto), tocca "Dungeon".`);
                 updateUI();
                 return;
             }
