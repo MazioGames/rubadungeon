@@ -749,7 +749,7 @@
             }
         }
 
-        /* ENGINE GENERICO ANIMAZIONI SPOSATMENTO CARTE */
+        /* ENGINE GENERICO ANIMAZIONI TRASLAZIONE CARTE */
         function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, onComplete }) {
             if (!startElem || !endElem) {
                 if (onComplete) onComplete();
@@ -903,12 +903,14 @@
                 let extraTag = '';
 
                 if (inCombattimento) {
-                    let hasRelic = reliquieOttenute.some(r => r.suit === card.suit);
+                    let hasRelic = reliquieOttenute.some(r => r.suit === card.suit) ? 1 : 0;
                     let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
-                    let hasAid = selectedAids.some(a => a.suit === card.suit);
+                    let aidBonus = selectedAids.filter(a => a.suit === card.suit).length;
+                    let totalBonus = hasRelic + aidBonus;
 
-                    if (hasRelic && hasAid) extraTag = '<div class="bonus-tag">+2</div>';
-                    else if (hasRelic || hasAid) extraTag = '<div class="bonus-tag">+1</div>';
+                    if (totalBonus > 0) {
+                        extraTag = `<div class="bonus-tag">+${totalBonus}</div>`;
+                    }
                 }
 
                 heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`);
@@ -946,7 +948,6 @@
             `;
         }
 
-        /* 1. ANIMAZIONE PESCA ORO */
         function collectDenariEvent() {
             if (!cartaEventoCorrente || cartaEventoCorrente.suit !== SUITS.DENARI || isAnimating) return;
 
@@ -1066,11 +1067,10 @@
                 log(`Hai risolto l'evento ${cartaEventoCorrente.suit} (${vce}) pagando ${selectedVal} Oro!`);
                 payGoldSelectedAndDiscard(() => { endTurn(true); });
             } else {
-                log(`Oro selezionato insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro oppure lancia il Dado per il test.`);
+                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro oppure lancia il Dado per il test.`);
             }
         }
 
-        /* 2. ANIMAZIONE SPESA ORO (DAL MAZZO ORO A EVENTI) */
         function payGoldSelectedAndDiscard(onComplete) {
             let selectedCards = carteOro.filter(c => carteOroSelezionate.includes(c.id));
             if (selectedCards.length === 0) {
@@ -1120,7 +1120,6 @@
             drawEventWithAnimation();
         }
 
-        /* 5. ANIMAZIONE SCARTO CARTE AZIONE */
         function handleEventPileClick() {
             if (!fasePostCombattimento || isAnimating) return;
 
@@ -1260,7 +1259,6 @@
             }, 600);
         }
 
-        /* 3. ANIMAZIONE INGRESSO CARTA NEMICO DAL MAZZO PERSONAGGI AL MAZZO NEMICO */
         function startCombat() {
             if (mazzoPersonaggi.length === 0) {
                 log('Tutti i nemici del mazzo sono stati affrontati!');
@@ -1369,7 +1367,6 @@
             playSelectedHeroCards();
         }
 
-        /* 4. ANIMAZIONE CARTA EROE CHE SI SPOSTA SOPRA LA CARTA AZIONE NEMICO */
         function playSelectedHeroCards() {
             if (carteSelezionateEroe.length === 0 || carteAzioneNemico.length === 0) return;
 
@@ -1392,6 +1389,7 @@
                     
                     let relicBonus = reliquieOttenute.filter(r => r.suit === chosenSuit).length;
                     
+                    // SUPPORTO PER AIUTI MULTIPLI DELLO STESSO SEME
                     let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
                     let matchingAids = selectedAids.filter(a => a.suit === chosenSuit);
                     let aidBonus = matchingAids.length;
@@ -1407,7 +1405,7 @@
                     let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
                     let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
 
-                    log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''})`);
+                    log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
                     log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue})`);
 
                     resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
@@ -1426,36 +1424,54 @@
         }
 
         function resolveCombatExchange(hSuit, hVal, eSuit, eVal) {
+            let isHeroAttacking = (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI);
+            let isEnemyAttacking = (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI);
+
+            // 1. SPADE VS BASTONI O BASTONI VS SPADE
+            if ((hSuit === SUITS.SPADE && eSuit === SUITS.BASTONI) || (hSuit === SUITS.BASTONI && eSuit === SUITS.SPADE)) {
+                let heroDamageTaken = eVal;
+                let enemyDamageTaken = hVal;
+
+                hero.hp -= heroDamageTaken;
+                enemyHp = Math.max(0, enemyHp - enemyDamageTaken);
+
+                log(`Scontro frontale ${hSuit} vs ${eSuit}! L'Eroe subisce ${heroDamageTaken} danni e il Nemico subisce ${enemyDamageTaken} danni!`);
+                return;
+            }
+
+            // 2. BASTONI VS BASTONI (Parata/Contropiede)
             if (hSuit === SUITS.BASTONI && eSuit === SUITS.BASTONI) {
                 let diff = hVal - eVal;
                 if (diff > 0) {
                     enemyHp = Math.max(0, enemyHp - diff);
-                    log(`Parata perfetta! Contropiedi e infliggi ${diff} danni!`);
+                    log(`Parata perfetta con Bastoni! Contropiedi e infliggi ${diff} danni!`);
                 } else if (diff < 0) {
                     hero.hp -= Math.abs(diff);
-                    log(`Il Nemico ti sopraffà e infligge ${Math.abs(diff)} danni!`);
+                    log(`Il Nemico ti sopraffà con Bastoni e ti infligge ${Math.abs(diff)} danni!`);
                 } else {
-                    log('Parata reciproca! Nessun danno inflitto.');
+                    log('Parata reciproca con Bastoni! Nessun danno inflitto.');
                 }
                 return;
             }
 
-            if (eSuit === SUITS.SPADE) {
-                let damage = Math.max(0, eVal - (hSuit === SUITS.DENARI ? hVal : 0));
-                hero.hp -= damage;
-                log(`L'attacco del Nemico ti infligge ${damage} danni.`);
+            // 3. DANNO/DIFESA DEL NEMICO
+            if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
+                let damageToHero = Math.max(0, eVal - (hSuit === SUITS.DENARI ? hVal : 0));
+                hero.hp -= damageToHero;
+                log(`L'attacco del Nemico (${eSuit}) ti infligge ${damageToHero} danni.`);
             } else if (eSuit === SUITS.COPPE) {
                 enemyHp = Math.min(enemyMaxHp, enemyHp + eVal);
-                log(`Il Nemico si cura. HP Nemico: ${enemyHp}/${enemyMaxHp}`);
+                log(`Il Nemico gioca Coppe e si cura di ${eVal} HP. (HP Nemico: ${enemyHp}/${enemyMaxHp})`);
             }
 
+            // 4. DANNO/CURA DELL'EROE
             if (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI) {
-                let damage = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
-                enemyHp = Math.max(0, enemyHp - damage);
-                log(`Attacchi con ${hSuit} e infliggi ${damage} danni!`);
+                let damageToEnemy = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
+                enemyHp = Math.max(0, enemyHp - damageToEnemy);
+                log(`Attacchi con ${hSuit} e infliggi ${damageToEnemy} danni al Nemico!`);
             } else if (hSuit === SUITS.COPPE) {
                 hero.hp = Math.min(hero.maxHp, hero.hp + hVal);
-                log(`Ti curi di ${hVal} HP!`);
+                log(`Giochi Coppe e ti curi di ${hVal} HP! (HP Eroe: ${hero.hp}/${hero.maxHp})`);
             }
         }
 
