@@ -661,7 +661,7 @@
             z-index: 9999;
             pointer-events: none;
             perspective: 1000px;
-            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .animated-card-inner {
@@ -669,7 +669,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .animated-card-inner.flipped {
@@ -829,6 +829,8 @@
         let nemiciSconfittiTotali = 0;
         let isAnimating = false;
 
+        let inAttesaCorruzione = false;
+
         function log(msg) {
             const logDiv = document.getElementById('log');
             logDiv.innerHTML += `<div>> ${msg}</div>`;
@@ -940,6 +942,7 @@
             canDrawEvent = true;
             nemiciSconfittiTotali = 0;
             isAnimating = false;
+            inAttesaCorruzione = false;
 
             updateUI();
             log(`Eroe estratto: ${hero.card.value} di ${hero.card.suit}`);
@@ -967,7 +970,7 @@
             }
         }
 
-        function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, onComplete }) {
+        function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, duration = 800, onComplete }) {
             if (!startElem || !endElem) {
                 if (onComplete) onComplete();
                 return;
@@ -984,13 +987,14 @@
             flyer.style.top = `${startRect.top}px`;
             flyer.style.width = `${startRect.width || 52}px`;
             flyer.style.height = `${startRect.height || 75}px`;
+            flyer.style.transition = `all ${duration / 1000}s cubic-bezier(0.25, 0.8, 0.25, 1)`;
 
             let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
             let backHTML = renderCardBackHTML('', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
 
             if (isFlipping) {
                 flyer.innerHTML = `
-                    <div class="animated-card-inner" id="anim-inner">
+                    <div class="animated-card-inner" id="anim-inner" style="transition: transform ${duration / 1000}s cubic-bezier(0.25, 0.8, 0.25, 1);">
                         <div class="animated-card-face animated-card-back">${startFaceDown ? backHTML : frontHTML}</div>
                         <div class="animated-card-face animated-card-front">${startFaceDown ? frontHTML : backHTML}</div>
                     </div>
@@ -1017,7 +1021,7 @@
                 if (flyer.parentNode) flyer.parentNode.removeChild(flyer);
                 isAnimating = false;
                 if (onComplete) onComplete();
-            }, 600);
+            }, duration);
         }
 
         function updateUI() {
@@ -1056,7 +1060,7 @@
                 ? renderCardHTML(topEventCard, `(${totalEventPilaCount})`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
                 : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('Scarta Qui', '', false, 'event-discardable') : '');
 
-            let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
+            let canFightManual = inAttesaCorruzione || (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
             let enemyClass = canFightManual ? 'clickable-enemy-card' : '';
             document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 
                 ? renderCardBackHTML('Nemici', mazzoPersonaggi.length, true, enemyClass) 
@@ -1245,44 +1249,10 @@
             }
 
             if (selectedVal >= bribeCost) {
-                log(`Oro selezionato (${selectedVal}) >= costo Corruzione (${bribeCost}). Tentativo di CORRUZIONE!`);
+                log(`Oro selezionato (${selectedVal}) sufficiente per tentare la CORRUZIONE! Tocca la casella Nemici per ingaggiare il nemico.`);
                 payGoldSelectedAndDiscard(() => {
-                    if (mazzoPersonaggi.length === 0) {
-                        log('Nessun nemico rimasto!');
-                        endTurn(true);
-                        return;
-                    }
-
-                    let candidateEnemy = mazzoPersonaggi.pop();
-                    log(`Corruzione diretta su: ${candidateEnemy.value} di ${candidateEnemy.suit}...`);
-
-                    if (candidateEnemy.value === 8 || candidateEnemy.value === 9) {
-                        carteAiuto.push(candidateEnemy);
-                        log(`★ CORRUZIONE RIUSCITA! ★ Il nemico diviene una Carta Aiuto!`);
-                        nemiciSconfittiTotali++;
-                        endTurn(true);
-                    } else {
-                        log(`☠ CORRUZIONE FALLITA! Il Re (10) è INCORRUTTIBILE! Si combatte!`);
-                        enemy = candidateEnemy;
-                        enemyMaxHp = mode === 'Facile' ? 6 : 10;
-                        enemyHp = enemyMaxHp;
-                        inCombattimento = true;
-                        canDrawEvent = false;
-                        setDiceEnabled(false);
-                        
-                        let startElem = document.getElementById('deck-characters');
-                        let endElem = document.getElementById('slot-enemy');
-                        enemy.isEnemy = true;
-
-                        animateCardMovement({
-                            startElem: startElem,
-                            endElem: endElem,
-                            cardData: enemy,
-                            isFlipping: true,
-                            startFaceDown: true,
-                            onComplete: () => { setupCombatTurn(); }
-                        });
-                    }
+                    inAttesaCorruzione = true;
+                    log('L\'oro è stato pagato! Ora tocca la casella Nemici per rivelare chi hai incontrato.');
                 });
             } else if (selectedVal >= bypassCost) {
                 log(`Hai pagato l'Oro sufficiente (${selectedVal})! Eviti l'evento e il combattimento.`);
@@ -1402,7 +1372,7 @@
 
             animateCardMovement({
                 startElem: sourceElem,
-                endElem: targetElem,
+                targetElem: targetElem,
                 cardData: drawnCard,
                 isFlipping: true,
                 startFaceDown: true,
@@ -1444,6 +1414,63 @@
 
         function handleEnemyDeckClick() {
             if (isAnimating) return;
+
+            if (inAttesaCorruzione) {
+                if (mazzoPersonaggi.length === 0) {
+                    log('Nessun nemico rimasto nel mazzo!');
+                    inAttesaCorruzione = false;
+                    endTurn(true);
+                    return;
+                }
+
+                let candidateEnemy = mazzoPersonaggi.pop();
+                candidateEnemy.isEnemy = true;
+                let startElem = document.getElementById('deck-characters');
+
+                if (candidateEnemy.value === 8 || candidateEnemy.value === 9) {
+                    log(`Tentativo di corruzione su ${candidateEnemy.value} di ${candidateEnemy.suit}...`);
+                    let endElem = document.getElementById('slot-aids');
+
+                    animateCardMovement({
+                        startElem: startElem,
+                        endElem: endElem,
+                        cardData: candidateEnemy,
+                        isFlipping: true,
+                        startFaceDown: true,
+                        duration: 800,
+                        onComplete: () => {
+                            carteAiuto.push(candidateEnemy);
+                            log(`★ CORRUZIONE RIUSCITA! ★ Il nemico (${candidateEnemy.value} di ${candidateEnemy.suit}) si unisce come Carta Aiuto!`);
+                            nemiciSconfittiTotali++;
+                            inAttesaCorruzione = false;
+                            endTurn(true);
+                        }
+                    });
+                } else {
+                    log(`☠ CORRUZIONE FALLITA! Estratto il Re (${candidateEnemy.value} di ${candidateEnemy.suit}). I Re sono INCORRUTTIBILI! Inizia il combattimento!`);
+                    enemy = candidateEnemy;
+                    enemyMaxHp = mode === 'Facile' ? 6 : 10;
+                    enemyHp = enemyMaxHp;
+                    inCombattimento = true;
+                    canDrawEvent = false;
+                    inAttesaCorruzione = false;
+                    setDiceEnabled(false);
+
+                    let endElem = document.getElementById('slot-enemy');
+
+                    animateCardMovement({
+                        startElem: startElem,
+                        endElem: endElem,
+                        cardData: enemy,
+                        isFlipping: true,
+                        startFaceDown: true,
+                        duration: 800,
+                        onComplete: () => { setupCombatTurn(); }
+                    });
+                }
+                return;
+            }
+
             if (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento) {
                 log('Hai scelto di affrontare il Nemico! Avvio Combattimento...');
                 startCombat();
