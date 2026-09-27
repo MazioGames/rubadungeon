@@ -296,10 +296,10 @@
         }
 
         /* Colorazioni semi */
-        .suit-bastoni { color: #5d4037; } /* Marrone per il bastone */
-        .suit-coppe { color: #c62828; }   /* Rosso per le coppe */
-        .suit-denari { color: #f57f17; }  /* Giallo/Oro per i denari */
-        .suit-spade { color: #1565c0; }   /* Blu per le spade */
+        .suit-bastoni { color: #5d4037; }
+        .suit-coppe { color: #c62828; }
+        .suit-denari { color: #f57f17; }
+        .suit-spade { color: #1565c0; }
 
         /* --- DORSO CARTE --- */
         .card.back {
@@ -340,6 +340,20 @@
             align-items: center;
             padding: 2px;
             pointer-events: none;
+        }
+
+        .card-back-title {
+            font-size: 0.58rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        .card-back-count {
+            font-size: 0.55rem;
+            margin-top: 2px;
+            opacity: 0.9;
         }
 
         .enemy-back .card-back-pattern {
@@ -634,24 +648,24 @@
 
     <div class="board" id="game-board">
         <!-- RIGA 1 -->
-        <div class="slot" onclick="handleDungeonDeckClick()"><span class="slot-title">1. Dungeon</span><div id="deck-dungeon" class="card-container"></div></div>
-        <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">2. Eventi Pila</span><div id="card-event" class="card-container"></div></div>
-        <div class="slot" onclick="handleEnemyDeckClick()"><span class="slot-title">3. Nemici</span><div id="deck-characters" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">4. Catacomba</span><div id="slot-catacomb" class="card-container"></div></div>
+        <div class="slot" onclick="handleDungeonDeckClick()"><span class="slot-title">Dungeon</span><div id="deck-dungeon" class="card-container"></div></div>
+        <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">Eventi Pila</span><div id="card-event" class="card-container"></div></div>
+        <div class="slot" onclick="handleEnemyDeckClick()"><span class="slot-title">Nemici</span><div id="deck-characters" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Catacomba</span><div id="slot-catacomb" class="card-container"></div></div>
 
         <!-- RIGA 2 -->
         <div class="slot empty"></div>
-        <div class="slot"><span class="slot-title">5. Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
+        <div class="slot"><span class="slot-title">Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
         <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container"></div></div>
 
         <!-- RIGA 3 -->
-        <div class="slot"><span class="slot-title">6. Reliquie</span><div id="slot-relics" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">7. Eroe</span><div id="slot-hero" class="card-container shift-right"></div></div>
+        <div class="slot"><span class="slot-title">Reliquie</span><div id="slot-relics" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Eroe</span><div id="slot-hero" class="card-container shift-right"></div></div>
         <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container"></div></div>
 
         <!-- RIGA 4 -->
-        <div class="slot"><span class="slot-title">8. Oro</span><div id="slot-gold" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">9. Aiuti</span><div id="slot-aids" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Oro</span><div id="slot-gold" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Aiuti</span><div id="slot-aids" class="card-container"></div></div>
         
         <div class="slot slot-dice">
             <div id="dice-container" class="dice-slot disabled" onclick="rollDiceTest()">
@@ -659,7 +673,7 @@
             </div>
         </div>
 
-        <div class="slot"><span class="slot-title">10. Mazzo Reliquie</span><div id="deck-relics" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Mazzo Reliquie</span><div id="deck-relics" class="card-container"></div></div>
         
         <!-- OVERLAY SCONFITTA -->
         <div id="defeat-overlay" class="defeat-overlay" style="display: none;">
@@ -683,12 +697,11 @@
         </div>
     </div>
 
-    <div id="log">Tocca la casella "1. Dungeon" per pescare una carta evento!</div>
+    <div id="log">Tocca la casella "Dungeon" per pescare una carta evento!</div>
 
     <script>
         const SUITS = { BASTONI: 'Bastoni', COPPE: 'Coppe', DENARI: 'Denari', SPADE: 'Spade' };
         
-        // NUOVO SIMBOLO BASTONI (Sostituito il fiore ♣ con un bastone/manganello 🪵)
         const SUIT_SYMBOLS = {
             'Bastoni': '🪵',
             'Coppe': '🍷',
@@ -743,13 +756,14 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        function renderCardBackHTML(title, countText, isEnemy = false, extraClasses = '') {
+        // Funzione aggiornata per mostrare "Ruba Dungeon" sul dorso di tutte le carte coperte
+        function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '') {
             let backClass = isEnemy ? 'enemy-back' : 'back';
-            let subText = countText ? `<br>(${countText})` : '';
+            let subText = countText ? `<div class="card-back-count">(${countText})</div>` : '';
             return `
                 <div class="card ${backClass} ${extraClasses}">
                     <div class="card-back-pattern">
-                        <div>${title}</div>
+                        <div class="card-back-title">Ruba<br>Dungeon</div>
                         ${subText}
                     </div>
                 </div>
@@ -893,7 +907,7 @@
             flyer.style.height = `${startRect.height || 75}px`;
 
             let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
-            let backHTML = renderCardBackHTML('Nemico', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
+            let backHTML = renderCardBackHTML('', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
 
             if (isFlipping) {
                 flyer.innerHTML = `
@@ -937,7 +951,7 @@
             let canClickDungeon = (canDrawEvent && !inCombattimento) || fasePostCombattimento;
             let dungeonClass = canClickDungeon ? 'dungeon-drawable' : '';
             document.getElementById('deck-dungeon').innerHTML = mazzoDungeon.length > 0 
-                ? renderCardBackHTML('1. Dungeon', mazzoDungeon.length, false, dungeonClass)
+                ? renderCardBackHTML('Dungeon', mazzoDungeon.length, false, dungeonClass)
                 : '';
             
             let topEventCard = cartaEventoCorrente || (carteEventoPila.length > 0 ? carteEventoPila[carteEventoPila.length - 1] : null);
@@ -959,12 +973,12 @@
 
             document.getElementById('card-event').innerHTML = topEventCard 
                 ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
-                : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('2. Scarta Qui', '', false, 'event-discardable') : '');
+                : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('Scarta Qui', '', false, 'event-discardable') : '');
 
             let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
             let enemyClass = canFightManual ? 'clickable-enemy-card' : '';
             document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 
-                ? renderCardBackHTML('3. Nemici', mazzoPersonaggi.length, true, enemyClass) 
+                ? renderCardBackHTML('Nemici', mazzoPersonaggi.length, true, enemyClass) 
                 : '';
             
             let catacombHTML = '';
@@ -995,7 +1009,7 @@
             document.getElementById('slot-hero').innerHTML = heroDiceHTML + renderCardHTML(hero.card);
 
             document.getElementById('deck-relics').innerHTML = mazzoReliquie.length > 0 
-                ? renderCardBackHTML('10. Reliquie', mazzoReliquie.length) 
+                ? renderCardBackHTML('Reliquie', mazzoReliquie.length) 
                 : '';
 
             let goldHTML = '';
@@ -1234,7 +1248,7 @@
 
             if (fasePostCombattimento) {
                 if (carteSelezionateEroe.length > 0) {
-                    log('Hai carte azione selezionate! Tocca la casella "2. Eventi Pila" per scartarle, oppure deselezionale prima di proseguire.');
+                    log('Hai carte azione selezionate! Tocca la casella "Eventi Pila" per scartarle, oppure deselezionale prima di proseguire.');
                     return;
                 }
                 fasePostCombattimento = false;
@@ -1633,7 +1647,7 @@
 
                 fasePostCombattimento = true;
                 carteSelezionateEroe = [];
-                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "2. Eventi Pila". Per proseguire senza scarti (o dopo lo scarto), tocca "1. Dungeon".`);
+                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "Eventi Pila". Per proseguire senza scarti (o dopo lo scarto), tocca "Dungeon".`);
                 updateUI();
                 return;
             }
