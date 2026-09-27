@@ -242,27 +242,53 @@
             box-shadow: 0 0 10px var(--selected-border);
         }
 
+        /* --- STILI DEL DORSO DELLE CARTE --- */
         .card.back {
-            background: #201a15;
-            border-color: #a88d67;
-            color: #d9a05b;
+            background: 
+                radial-gradient(circle, #3a2b1f 0%, #17110c 100%),
+                repeating-linear-gradient(45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px),
+                repeating-linear-gradient(-45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
             justify-content: center;
             align-items: center;
             font-size: 0.65rem;
             text-align: center;
             line-height: 1.1;
+            box-shadow: inset 0 0 0 2px #120e0c, 0 3px 6px rgba(0,0,0,0.8);
         }
 
         .card.enemy-back {
-            background: var(--enemy-color);
-            border-color: #ff8888;
-            color: #fff;
+            background: 
+                radial-gradient(circle, #801818 0%, #300000 100%),
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px),
+                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px);
+            border: 2px solid #ff8888;
+            color: #ffffff;
             justify-content: center;
             align-items: center;
             font-size: 0.65rem;
             text-align: center;
             width: 52px;
             line-height: 1.1;
+            box-shadow: inset 0 0 0 2px #200000, 0 3px 6px rgba(0,0,0,0.8);
+        }
+
+        .card-back-pattern {
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(217, 160, 91, 0.4);
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2px;
+            pointer-events: none;
+        }
+
+        .enemy-back .card-back-pattern {
+            border-color: rgba(255, 136, 136, 0.5);
         }
 
         .clickable-enemy-card {
@@ -593,6 +619,19 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
+        function renderCardBackHTML(title, countText, isEnemy = false, extraClasses = '') {
+            let backClass = isEnemy ? 'enemy-back' : 'back';
+            let subText = countText ? `<br>(${countText})` : '';
+            return `
+                <div class="card ${backClass} ${extraClasses}">
+                    <div class="card-back-pattern">
+                        <div>${title}</div>
+                        ${subText}
+                    </div>
+                </div>
+            `;
+        }
+
         function toggleMode() {
             if (inCombattimento || cartaEventoCorrente || fasePostCombattimento || isAnimating) {
                 log('Impossibile cambiare modalità a partita in corso.');
@@ -730,7 +769,7 @@
             flyer.style.height = `${startRect.height || 75}px`;
 
             let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
-            let backHTML = `<div class="card ${cardData && cardData.isEnemy ? 'enemy-back' : 'back'}" style="width:100%; height:100%;">Nemico</div>`;
+            let backHTML = renderCardBackHTML('Nemico', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
 
             if (isFlipping) {
                 flyer.innerHTML = `
@@ -773,8 +812,9 @@
 
             // Mazzo Dungeon
             let canClickDungeon = (canDrawEvent && !inCombattimento) || fasePostCombattimento;
+            let dungeonClass = canClickDungeon ? 'dungeon-drawable' : '';
             document.getElementById('deck-dungeon').innerHTML = mazzoDungeon.length > 0 
-                ? `<div class="card back ${canClickDungeon ? 'dungeon-drawable' : ''}">1. Dungeon<br>(${mazzoDungeon.length})</div>` 
+                ? renderCardBackHTML('1. Dungeon', mazzoDungeon.length, false, dungeonClass)
                 : '';
             
             // Carta Evento / Pila Eventi
@@ -797,11 +837,14 @@
 
             document.getElementById('card-event').innerHTML = topEventCard 
                 ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
-                : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? `<div class="card back event-discardable" style="justify-content: center;">2. Scarta Qui</div>` : '');
+                : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('2. Scarta Qui', '', false, 'event-discardable') : '');
 
             // Mazzo Nemici
             let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
-            document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 ? `<div class="card enemy-back ${canFightManual ? 'clickable-enemy-card' : ''}">3. Nemici<br>(${mazzoPersonaggi.length})</div>` : '';
+            let enemyClass = canFightManual ? 'clickable-enemy-card' : '';
+            document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 
+                ? renderCardBackHTML('3. Nemici', mazzoPersonaggi.length, true, enemyClass) 
+                : '';
             
             // Slot Catacomba
             let catacombHTML = '';
@@ -833,7 +876,9 @@
                 </div>`;
             document.getElementById('slot-hero').innerHTML = heroDiceHTML + renderCardHTML(hero.card);
 
-            document.getElementById('deck-relics').innerHTML = mazzoReliquie.length > 0 ? `<div class="card back">10. Reliquie<br>(${mazzoReliquie.length})</div>` : '';
+            document.getElementById('deck-relics').innerHTML = mazzoReliquie.length > 0 
+                ? renderCardBackHTML('10. Reliquie', mazzoReliquie.length) 
+                : '';
 
             // Slot Oro
             let goldHTML = '';
@@ -881,7 +926,7 @@
                     if (card.revealed) {
                         enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', '', isClickableClass, cardElementId);
                     } else {
-                        enemyActHTML += `<div class="card enemy-back">Nemico</div>`;
+                        enemyActHTML += renderCardBackHTML('Nemico', '', true);
                     }
                 });
             }
