@@ -1063,11 +1063,26 @@
             }
             document.getElementById('slot-catacomb').innerHTML = catacombHTML;
 
-            let enemyDiceVal = Math.max(1, Math.min(6, enemyHp || 1));
-            let enemyDiceHTML = enemy ? `
-                <div class="hp-dice-group">
-                    <div class="hp-dice enemy-dice">${DICE_FACES[enemyDiceVal - 1]}</div>
-                </div>` : '';
+            let enemyDiceHTML = '';
+            if (enemy) {
+                let currentEnemyHp = Math.max(0, enemyHp);
+                if (mode === 'Difficile') {
+                    let ed1 = Math.min(6, currentEnemyHp);
+                    let ed2 = Math.max(0, currentEnemyHp - 6);
+                    enemyDiceHTML = `
+                        <div class="hp-dice-group">
+                            <div class="hp-dice enemy-dice">${DICE_FACES[ed1 > 0 ? ed1 - 1 : 0]}</div>
+                            ${ed2 > 0 ? `<div class="hp-dice enemy-dice">${DICE_FACES[ed2 - 1]}</div>` : ''}
+                        </div>`;
+                } else {
+                    let enemyDiceVal = Math.max(1, Math.min(6, currentEnemyHp || 1));
+                    enemyDiceHTML = `
+                        <div class="hp-dice-group">
+                            <div class="hp-dice enemy-dice">${DICE_FACES[enemyDiceVal - 1]}</div>
+                        </div>`;
+                }
+            }
+
             document.getElementById('slot-enemy').innerHTML = enemy ? enemyDiceHTML + renderCardHTML(enemy, '', false, '', '', '', 'slot-enemy-card') : '';
 
             let relicsHTML = '';
