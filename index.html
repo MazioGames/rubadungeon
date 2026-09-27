@@ -216,7 +216,6 @@
             border-radius: 2px;
         }
 
-        /* INGRANDIMENTO CARTE */
         .card {
             width: 52px;
             height: 92%;
@@ -457,13 +456,13 @@
             to { opacity: 1; }
         }
 
-        /* --- STILI ANIMAZIONE PESCA CARTA --- */
+        /* --- STILI ANIMAZIONI TRASLAZIONE CARTE --- */
         .animated-card-flyer {
             position: fixed;
             z-index: 9999;
             pointer-events: none;
             perspective: 1000px;
-            transition: all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .animated-card-inner {
@@ -471,7 +470,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .animated-card-inner.flipped {
@@ -711,6 +710,60 @@
             }
         }
 
+        /* ENGINE GENERICO ANIMAZIONI SPOSATMENTO CARTE */
+        function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, onComplete }) {
+            if (!startElem || !endElem) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            isAnimating = true;
+
+            let startRect = startElem.getBoundingClientRect();
+            let endRect = endElem.getBoundingClientRect();
+
+            let flyer = document.createElement('div');
+            flyer.className = 'animated-card-flyer';
+            flyer.style.left = `${startRect.left}px`;
+            flyer.style.top = `${startRect.top}px`;
+            flyer.style.width = `${startRect.width || 52}px`;
+            flyer.style.height = `${startRect.height || 75}px`;
+
+            let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
+            let backHTML = `<div class="card ${cardData && cardData.isEnemy ? 'enemy-back' : 'back'}" style="width:100%; height:100%;">Nemico</div>`;
+
+            if (isFlipping) {
+                flyer.innerHTML = `
+                    <div class="animated-card-inner" id="anim-inner">
+                        <div class="animated-card-face animated-card-back">${startFaceDown ? backHTML : frontHTML}</div>
+                        <div class="animated-card-face animated-card-front">${startFaceDown ? frontHTML : backHTML}</div>
+                    </div>
+                `;
+            } else {
+                flyer.innerHTML = frontHTML;
+            }
+
+            document.body.appendChild(flyer);
+
+            requestAnimationFrame(() => {
+                flyer.style.left = `${endRect.left}px`;
+                flyer.style.top = `${endRect.top}px`;
+                if (endRect.width) flyer.style.width = `${endRect.width}px`;
+                if (endRect.height) flyer.style.height = `${endRect.height}px`;
+
+                if (isFlipping) {
+                    let inner = flyer.querySelector('#anim-inner');
+                    if (inner) inner.classList.add('flipped');
+                }
+            });
+
+            setTimeout(() => {
+                if (flyer.parentNode) flyer.parentNode.removeChild(flyer);
+                isAnimating = false;
+                if (onComplete) onComplete();
+            }, 600);
+        }
+
         function updateUI() {
             document.getElementById('hero-hp').innerText = `${Math.max(0, hero.hp)}/12`;
             document.getElementById('enemy-hp').innerText = enemy ? `${enemyHp}/${enemyMaxHp}` : '-';
@@ -743,7 +796,7 @@
             }
 
             document.getElementById('card-event').innerHTML = topEventCard 
-                ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass) 
+                ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
                 : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? `<div class="card back event-discardable" style="justify-content: center;">2. Scarta Qui</div>` : '');
 
             // Mazzo Nemici
@@ -753,9 +806,7 @@
             // Slot Catacomba
             let catacombHTML = '';
             if (catacomba.length > 0) {
-                catacomba.forEach(c => {
-                    catacombHTML += renderCardHTML(c);
-                });
+                catacomba.forEach(c => { catacombHTML += renderCardHTML(c); });
             }
             document.getElementById('slot-catacomb').innerHTML = catacombHTML;
 
@@ -765,12 +816,10 @@
                 <div class="hp-dice-group">
                     <div class="hp-dice enemy-dice">${DICE_FACES[enemyDiceVal - 1]}</div>
                 </div>` : '';
-            document.getElementById('slot-enemy').innerHTML = enemy ? enemyDiceHTML + renderCardHTML(enemy) : '';
+            document.getElementById('slot-enemy').innerHTML = enemy ? enemyDiceHTML + renderCardHTML(enemy, '', false, '', '', '', 'slot-enemy-card') : '';
 
             let relicsHTML = '';
-            reliquieOttenute.forEach(rel => {
-                relicsHTML += renderCardHTML(rel);
-            });
+            reliquieOttenute.forEach(rel => { relicsHTML += renderCardHTML(rel); });
             document.getElementById('slot-relics').innerHTML = relicsHTML;
 
             // Slot Eroe
@@ -790,7 +839,7 @@
             let goldHTML = '';
             carteOro.forEach(card => {
                 let isSel = carteOroSelezionate.includes(card.id);
-                goldHTML += renderCardHTML(card, '', isSel, `toggleSelectGold('${card.id}')`);
+                goldHTML += renderCardHTML(card, '', isSel, `toggleSelectGold('${card.id}')`, '', '', `gold-card-${card.id}`);
             });
             document.getElementById('slot-gold').innerHTML = goldHTML;
 
@@ -813,14 +862,11 @@
                     let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
                     let hasAid = selectedAids.some(a => a.suit === card.suit);
 
-                    if (hasRelic && hasAid) {
-                        extraTag = '<div class="bonus-tag">+2</div>';
-                    } else if (hasRelic || hasAid) {
-                        extraTag = '<div class="bonus-tag">+1</div>';
-                    }
+                    if (hasRelic && hasAid) extraTag = '<div class="bonus-tag">+2</div>';
+                    else if (hasRelic || hasAid) extraTag = '<div class="bonus-tag">+1</div>';
                 }
 
-                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag);
+                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`);
             });
             document.getElementById('slot-hero-actions').innerHTML = heroActHTML;
 
@@ -830,9 +876,10 @@
                 carteAzioneNemico.forEach((card, index) => {
                     let isTopTargetCard = (index === carteAzioneNemico.length - 1);
                     let isClickableClass = (isTopTargetCard && carteSelezionateEroe.length > 0) ? 'clickable-enemy-card' : '';
+                    let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
 
                     if (card.revealed) {
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', '', isClickableClass);
+                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', '', isClickableClass, cardElementId);
                     } else {
                         enemyActHTML += `<div class="card enemy-back">Nemico</div>`;
                     }
@@ -841,10 +888,11 @@
             document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
         }
 
-        function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '') {
+        function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
             if (!card) return '';
+            let idAttr = elementId ? `id="${elementId}"` : '';
             return `
-                <div class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}">
+                <div ${idAttr} class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}">
                     <div class="card-val">${card.value}</div>
                     <div class="card-suit">${card.suit}</div>
                     ${badge ? `<div class="badge">${badge}</div>` : ''}
@@ -853,13 +901,27 @@
             `;
         }
 
+        /* 1. ANIMAZIONE PESCA ORO */
         function collectDenariEvent() {
             if (!cartaEventoCorrente || cartaEventoCorrente.suit !== SUITS.DENARI || isAnimating) return;
-            log(`Hai raccolto la carta Denari (+${cartaEventoCorrente.value}) e l'hai messa nella casella ORO!`);
-            carteOro.push(cartaEventoCorrente);
-            cartaEventoCorrente = null;
-            canDrawEvent = true;
-            updateUI();
+
+            let cardToCollect = cartaEventoCorrente;
+            let startElem = document.getElementById('current-event-card') || document.getElementById('card-event');
+            let endElem = document.getElementById('slot-gold');
+
+            log(`Hai raccolto la carta Denari (+${cardToCollect.value})!`);
+
+            animateCardMovement({
+                startElem: startElem,
+                endElem: endElem,
+                cardData: cardToCollect,
+                onComplete: () => {
+                    carteOro.push(cardToCollect);
+                    cartaEventoCorrente = null;
+                    canDrawEvent = true;
+                    updateUI();
+                }
+            });
         }
 
         function toggleSelectGold(id) {
@@ -896,36 +958,47 @@
 
             if (selectedVal === requiredGold) {
                 log(`Hai pagato l'Oro esatto (${selectedVal})! Eviti il combattimento.`);
-                payGoldSelectedAndDiscard();
-                endTurn(true);
+                payGoldSelectedAndDiscard(() => { endTurn(true); });
             } else if (selectedVal > requiredGold) {
                 log(`Oro selezionato (${selectedVal}) > costo (${requiredGold}). Tentativo di CORRUZIONE!`);
-                payGoldSelectedAndDiscard();
-                
-                if (mazzoPersonaggi.length === 0) {
-                    log('Nessun nemico rimasto!');
-                    endTurn(true);
-                    return;
-                }
+                payGoldSelectedAndDiscard(() => {
+                    if (mazzoPersonaggi.length === 0) {
+                        log('Nessun nemico rimasto!');
+                        endTurn(true);
+                        return;
+                    }
 
-                let candidateEnemy = mazzoPersonaggi.pop();
-                log(`Corruzione diretta su: ${candidateEnemy.value} di ${candidateEnemy.suit}...`);
+                    let candidateEnemy = mazzoPersonaggi.pop();
+                    log(`Corruzione diretta su: ${candidateEnemy.value} di ${candidateEnemy.suit}...`);
 
-                if (candidateEnemy.value === 8 || candidateEnemy.value === 9) {
-                    carteAiuto.push(candidateEnemy);
-                    log(`★ CORRUZIONE RIUSCITA! ★ Il nemico diviene una Carta Aiuto!`);
-                    nemiciSconfittiTotali++;
-                    endTurn(true);
-                } else {
-                    log(`☠ CORRUZIONE FALLITA! Il Re (10) è INCORRUTTIBILE! Si combatte!`);
-                    enemy = candidateEnemy;
-                    enemyMaxHp = mode === 'Facile' ? 6 : 10;
-                    enemyHp = enemyMaxHp;
-                    inCombattimento = true;
-                    canDrawEvent = false;
-                    setDiceEnabled(false);
-                    setupCombatTurn();
-                }
+                    if (candidateEnemy.value === 8 || candidateEnemy.value === 9) {
+                        carteAiuto.push(candidateEnemy);
+                        log(`★ CORRUZIONE RIUSCITA! ★ Il nemico diviene una Carta Aiuto!`);
+                        nemiciSconfittiTotali++;
+                        endTurn(true);
+                    } else {
+                        log(`☠ CORRUZIONE FALLITA! Il Re (10) è INCORRUTTIBILE! Si combatte!`);
+                        enemy = candidateEnemy;
+                        enemyMaxHp = mode === 'Facile' ? 6 : 10;
+                        enemyHp = enemyMaxHp;
+                        inCombattimento = true;
+                        canDrawEvent = false;
+                        setDiceEnabled(false);
+                        
+                        let startElem = document.getElementById('deck-characters');
+                        let endElem = document.getElementById('slot-enemy');
+                        enemy.isEnemy = true;
+
+                        animateCardMovement({
+                            startElem: startElem,
+                            endElem: endElem,
+                            cardData: enemy,
+                            isFlipping: true,
+                            startFaceDown: true,
+                            onComplete: () => { setupCombatTurn(); }
+                        });
+                    }
+                });
             } else {
                 log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro o combatti il Nemico!`);
             }
@@ -945,19 +1018,42 @@
             }
 
             if (selectedVal >= requiredGold) {
-                log(`Hai risolto l'evento ${cartaEventoCorrente.suit} (${vce}) pagando ${selectedVal} Oro! Non serve lanciare il dado.`);
-                payGoldSelectedAndDiscard();
-                endTurn(true);
+                log(`Hai risolto l'evento ${cartaEventoCorrente.suit} (${vce}) pagando ${selectedVal} Oro!`);
+                payGoldSelectedAndDiscard(() => { endTurn(true); });
             } else {
                 log(`Oro selezionato insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro oppure lancia il Dado per il test.`);
             }
         }
 
-        function payGoldSelectedAndDiscard() {
+        /* 2. ANIMAZIONE SPESA ORO (DAL MAZZO ORO A EVENTI) */
+        function payGoldSelectedAndDiscard(onComplete) {
             let selectedCards = carteOro.filter(c => carteOroSelezionate.includes(c.id));
-            carteOro = carteOro.filter(c => !carteOroSelezionate.includes(c.id));
-            carteEventoPila.push(...selectedCards);
-            carteOroSelezionate = [];
+            if (selectedCards.length === 0) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            let endElem = document.getElementById('card-event');
+            let completed = 0;
+
+            selectedCards.forEach(card => {
+                let startElem = document.getElementById(`gold-card-${card.id}`) || document.getElementById('slot-gold');
+                animateCardMovement({
+                    startElem: startElem,
+                    endElem: endElem,
+                    cardData: card,
+                    onComplete: () => {
+                        completed++;
+                        if (completed === selectedCards.length) {
+                            carteOro = carteOro.filter(c => !carteOroSelezionate.includes(c.id));
+                            carteEventoPila.push(...selectedCards);
+                            carteOroSelezionate = [];
+                            updateUI();
+                            if (onComplete) onComplete();
+                        }
+                    }
+                });
+            });
         }
 
         function handleDungeonDeckClick() {
@@ -979,86 +1075,53 @@
             drawEventWithAnimation();
         }
 
+        /* 5. ANIMAZIONE SCARTO CARTE AZIONE */
         function handleEventPileClick() {
             if (!fasePostCombattimento || isAnimating) return;
 
             if (carteSelezionateEroe.length > 0) {
                 let discarded = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
-                carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
-                carteEventoPila.push(...discarded);
-                log(`Hai scartato ${discarded.length} carte azione nella Pila Eventi.`);
-                carteSelezionateEroe = [];
-                updateUI();
+                let endElem = document.getElementById('card-event');
+                let completed = 0;
+
+                discarded.forEach(card => {
+                    let startElem = document.getElementById(`hero-act-${card.id}`) || document.getElementById('slot-hero-actions');
+                    animateCardMovement({
+                        startElem: startElem,
+                        endElem: endElem,
+                        cardData: card,
+                        onComplete: () => {
+                            completed++;
+                            if (completed === discarded.length) {
+                                carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
+                                carteEventoPila.push(...discarded);
+                                log(`Hai scartato ${discarded.length} carte azione nella Pila Eventi.`);
+                                carteSelezionateEroe = [];
+                                updateUI();
+                            }
+                        }
+                    });
+                });
             } else {
                 log('Seleziona prima le carte azione che desideri scartare, poi tocca qui.');
             }
         }
 
-        /* ANIMAZIONE DALLA CASELLA 1 ALLA CASELLA 2 */
         function drawEventWithAnimation() {
             if (!checkAndReplenishDungeonDeck()) return;
 
             let sourceElem = document.getElementById('deck-dungeon');
             let targetElem = document.getElementById('card-event');
-
-            if (!sourceElem || !targetElem) {
-                drawEvent();
-                return;
-            }
-
-            isAnimating = true;
-
-            let sourceRect = sourceElem.getBoundingClientRect();
-            let targetRect = targetElem.getBoundingClientRect();
-
             let drawnCard = mazzoDungeon.pop();
 
-            let flyer = document.createElement('div');
-            flyer.className = 'animated-card-flyer';
-            flyer.style.left = `${sourceRect.left}px`;
-            flyer.style.top = `${sourceRect.top}px`;
-            flyer.style.width = `${sourceRect.width}px`;
-            flyer.style.height = `${sourceRect.height}px`;
-
-            flyer.innerHTML = `
-                <div class="animated-card-inner" id="animated-card-inner">
-                    <div class="animated-card-face animated-card-back">
-                        <div class="card back" style="width:100%; height:100%;">1. Dungeon</div>
-                    </div>
-                    <div class="animated-card-face animated-card-front">
-                        ${renderCardHTML(drawnCard)}
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(flyer);
-
-            // Trigger animazione
-            requestAnimationFrame(() => {
-                flyer.style.left = `${targetRect.left}px`;
-                flyer.style.top = `${targetRect.top}px`;
-                flyer.style.width = `${targetRect.width}px`;
-                flyer.style.height = `${targetRect.height}px`;
-
-                let inner = flyer.querySelector('#animated-card-inner');
-                if (inner) {
-                    inner.classList.add('flipped');
-                }
+            animateCardMovement({
+                startElem: sourceElem,
+                endElem: targetElem,
+                cardData: drawnCard,
+                isFlipping: true,
+                startFaceDown: true,
+                onComplete: () => { processDrawnEvent(drawnCard); }
             });
-
-            setTimeout(() => {
-                if (flyer.parentNode) {
-                    flyer.parentNode.removeChild(flyer);
-                }
-                isAnimating = false;
-                processDrawnEvent(drawnCard);
-            }, 700);
-        }
-
-        function drawEvent() {
-            if (!checkAndReplenishDungeonDeck()) return;
-            let card = mazzoDungeon.pop();
-            processDrawnEvent(card);
         }
 
         function processDrawnEvent(drawnCard) {
@@ -1152,6 +1215,7 @@
             }, 600);
         }
 
+        /* 3. ANIMAZIONE INGRESSO CARTA NEMICO DAL MAZZO PERSONAGGI AL MAZZO NEMICO */
         function startCombat() {
             if (mazzoPersonaggi.length === 0) {
                 log('Tutti i nemici del mazzo sono stati affrontati!');
@@ -1162,6 +1226,7 @@
             inCombattimento = true;
             canDrawEvent = false;
             enemy = mazzoPersonaggi.pop();
+            enemy.isEnemy = true;
             
             enemyMaxHp = mode === 'Facile' ? 6 : (enemy.value === 8 ? 8 : enemy.value === 9 ? 9 : 10);
             enemyHp = enemyMaxHp;
@@ -1170,7 +1235,18 @@
             log(`ENTRI IN COMBATTIMENTO contro ${rankName}: ${enemy.value} di ${enemy.suit} (${enemyHp}/${enemyMaxHp} HP)!`);
 
             setDiceEnabled(false);
-            setupCombatTurn();
+
+            let startElem = document.getElementById('deck-characters');
+            let endElem = document.getElementById('slot-enemy');
+
+            animateCardMovement({
+                startElem: startElem,
+                endElem: endElem,
+                cardData: enemy,
+                isFlipping: true,
+                startFaceDown: true,
+                onComplete: () => { setupCombatTurn(); }
+            });
         }
 
         function revealTopEnemyAction() {
@@ -1248,48 +1324,60 @@
             playSelectedHeroCards();
         }
 
+        /* 4. ANIMAZIONE CARTA EROE CHE SI SPOSTA SOPRA LA CARTA AZIONE NEMICO */
         function playSelectedHeroCards() {
             if (carteSelezionateEroe.length === 0 || carteAzioneNemico.length === 0) return;
 
             let heroCardsPlayed = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
-            let enemyCardPlayed = carteAzioneNemico.pop();
-            delete enemyCardPlayed.revealed;
+            let primaryHeroCard = heroCardsPlayed[0];
 
-            let chosenSuit = heroCardsPlayed[0].suit;
-            let heroBaseValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
-            
-            let relicBonus = reliquieOttenute.filter(r => r.suit === chosenSuit).length;
-            
-            let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
-            let matchingAids = selectedAids.filter(a => a.suit === chosenSuit);
-            let aidBonus = matchingAids.length;
+            let startElem = document.getElementById(`hero-act-${primaryHeroCard.id}`) || document.getElementById('slot-hero-actions');
+            let endElem = document.getElementById('top-enemy-action-card') || document.getElementById('slot-enemy-actions');
 
-            if (aidBonus > 0) {
-                carteAiuto = carteAiuto.filter(a => !matchingAids.map(m => m.id).includes(a.id));
-                catacomba.push(...matchingAids);
-                log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})! (vanno in Catacomba)`);
-            }
-            carteAiutoSelezionate = [];
+            animateCardMovement({
+                startElem: startElem,
+                endElem: endElem,
+                cardData: primaryHeroCard,
+                onComplete: () => {
+                    let enemyCardPlayed = carteAzioneNemico.pop();
+                    delete enemyCardPlayed.revealed;
 
-            let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
-            let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
-            let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
+                    let chosenSuit = heroCardsPlayed[0].suit;
+                    let heroBaseValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
+                    
+                    let relicBonus = reliquieOttenute.filter(r => r.suit === chosenSuit).length;
+                    
+                    let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
+                    let matchingAids = selectedAids.filter(a => a.suit === chosenSuit);
+                    let aidBonus = matchingAids.length;
 
-            log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''})`);
-            log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue})`);
+                    if (aidBonus > 0) {
+                        carteAiuto = carteAiuto.filter(a => !matchingAids.map(m => m.id).includes(a.id));
+                        catacomba.push(...matchingAids);
+                        log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})!`);
+                    }
+                    carteAiutoSelezionate = [];
 
-            resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
+                    let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
+                    let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
+                    let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
 
-            carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
-            carteSelezionateEroe = [];
+                    log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''})`);
+                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue})`);
 
-            carteEventoPila.push(enemyCardPlayed, ...heroCardsPlayed);
+                    resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
 
-            if (checkGameOver()) return;
+                    carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
+                    carteSelezionateEroe = [];
 
-            revealTopEnemyAction();
+                    carteEventoPila.push(enemyCardPlayed, ...heroCardsPlayed);
 
-            checkCombatStatus();
+                    if (checkGameOver()) return;
+
+                    revealTopEnemyAction();
+                    checkCombatStatus();
+                }
+            });
         }
 
         function resolveCombatExchange(hSuit, hVal, eSuit, eVal) {
