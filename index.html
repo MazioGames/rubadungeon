@@ -1741,7 +1741,8 @@
                         reliquieOttenute.push(rel);
                         log(`★ OTTENUTA LA RELIQUIA DI ${enemy.suit}! ★`);
                     }
-                    catacomba.push(enemy);
+                    carteAiuto.push(enemy);
+                    log(`Il Re sconfitto diviene una Carta Aiuto!`);
                 } else {
                     carteAiuto.push(enemy);
                     log(`Il nemico arruolato come Carta Aiuto.`);
@@ -1819,8 +1820,11 @@
                 relicContainer.innerHTML += renderCardHTML(rel);
             });
 
-            let kings = catacomba.filter(c => c.value === 10);
-            kings.forEach(king => {
+            let kingsInAid = carteAiuto.filter(c => c.value === 10);
+            let kingsInCatacomb = catacomba.filter(c => c.value === 10);
+            let allKings = [...kingsInAid, ...kingsInCatacomb];
+
+            allKings.forEach(king => {
                 kingContainer.innerHTML += renderCardHTML(king);
             });
 
