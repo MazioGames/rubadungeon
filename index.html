@@ -67,15 +67,8 @@
             text-transform: uppercase;
             letter-spacing: 3px;
             text-shadow: 0 4px 12px rgba(0,0,0,0.9), 0 0 20px rgba(229, 169, 93, 0.4);
-            margin-bottom: 8px;
-            font-weight: 800;
-        }
-
-        .start-subtitle {
-            font-size: 0.95rem;
-            color: #bfa58a;
             margin-bottom: 35px;
-            letter-spacing: 1px;
+            font-weight: 800;
         }
 
         .mode-selection-container {
@@ -90,29 +83,22 @@
             background: linear-gradient(180deg, #3a281c 0%, #1a100a 100%);
             color: #fdf6e3;
             border: 2px solid var(--accent-color);
-            padding: 14px 20px;
+            padding: 16px 20px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.6);
             transition: transform 0.15s, border-color 0.15s, background-color 0.15s;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 4px;
         }
 
         .btn-mode:active {
             transform: scale(0.96);
             background: var(--accent-color);
             color: #000;
-        }
-
-        .btn-mode-desc {
-            font-size: 0.68rem;
-            font-weight: normal;
-            opacity: 0.8;
         }
 
         /* HEADER E STATUS */
@@ -708,15 +694,12 @@
     <!-- SCHERMATA INIZIALE -->
     <div id="start-screen" class="start-screen">
         <div class="start-title">Ruba Dungeon</div>
-        <div class="start-subtitle">Scegli la difficoltà per iniziare</div>
         <div class="mode-selection-container">
             <button class="btn-mode" onclick="selectModeAndStart('Facile')">
-                <span>MODALITÀ FACILE</span>
-                <span class="btn-mode-desc">Sfida bilanciata per tutti</span>
+                Modalità facile
             </button>
             <button class="btn-mode" onclick="selectModeAndStart('Difficile')">
-                <span>MODALITÀ DIFFICILE</span>
-                <span class="btn-mode-desc">Costo oro raddoppiato & nemici più ostici</span>
+                Modalità difficile
             </button>
         </div>
     </div>
@@ -726,7 +709,6 @@
         <div class="header-actions">
             <button id="btn-show-menu" class="header-btn" onclick="showStartMenu()">Menu</button>
             <button id="btn-restart" class="header-btn btn-action" onclick="initGame()">Nuova Partita</button>
-            <button id="btn-toggle-mode" class="header-btn" onclick="toggleMode()">Modo: Facile</button>
         </div>
     </header>
     
@@ -848,7 +830,6 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        // Funzione per il rendering del dorso della carta con contatore in parentesi ()
         function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '') {
             let backClass = isEnemy ? 'enemy-back' : 'back';
             let subText = countText !== undefined && countText !== null && countText !== '' 
@@ -866,24 +847,12 @@
 
         function selectModeAndStart(selectedMode) {
             mode = selectedMode;
-            document.getElementById('btn-toggle-mode').innerText = `Modo: ${mode}`;
             document.getElementById('start-screen').style.display = 'none';
             initGame();
         }
 
         function showStartMenu() {
             document.getElementById('start-screen').style.display = 'flex';
-        }
-
-        function toggleMode() {
-            if (inCombattimento || cartaEventoCorrente || fasePostCombattimento || isAnimating) {
-                log('Impossibile cambiare modalità a partita in corso.');
-                return;
-            }
-            mode = mode === 'Facile' ? 'Difficile' : 'Facile';
-            document.getElementById('btn-toggle-mode').innerText = `Modo: ${mode}`;
-            log(`Modalità impostata su: ${mode}`);
-            initGame();
         }
 
         function createDeck() {
@@ -931,7 +900,7 @@
             diceBox.innerText = '⚀';
             resetDiceState();
             
-            log(`Nuova partita iniziata (${mode})... Tocca il Mazzo Dungeon per pescare.`);
+            log(`Nuova partita iniziata (Modalità: ${mode})... Tocca il Mazzo Dungeon per pescare.`);
 
             let fullDeck = createDeck();
             shuffle(fullDeck);
@@ -1170,7 +1139,6 @@
             document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
         }
 
-        /* --- RENDERING DELLA CARTA --- */
         function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
             if (!card) return '';
             let idAttr = elementId ? `id="${elementId}"` : '';
