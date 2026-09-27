@@ -44,6 +44,78 @@
             touch-action: manipulation;
         }
 
+        /* SCHERMATA INIZIALE (START MENU) */
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #2d2017 0%, #0d0906 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .start-title {
+            font-size: 2.8rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.9), 0 0 20px rgba(229, 169, 93, 0.4);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .start-subtitle {
+            font-size: 0.95rem;
+            color: #bfa58a;
+            margin-bottom: 35px;
+            letter-spacing: 1px;
+        }
+
+        .mode-selection-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .btn-mode {
+            background: linear-gradient(180deg, #3a281c 0%, #1a100a 100%);
+            color: #fdf6e3;
+            border: 2px solid var(--accent-color);
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            transition: transform 0.15s, border-color 0.15s, background-color 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-mode:active {
+            transform: scale(0.96);
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .btn-mode-desc {
+            font-size: 0.68rem;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+
+        /* HEADER E STATUS */
         header {
             text-align: center;
             height: 4vh;
@@ -230,7 +302,7 @@
             border-radius: 2px;
         }
 
-        /* --- DESIGN DELLE CARTE --- */
+        /* CARTE E DORSO CARTE */
         .card {
             width: 52px;
             height: 94%;
@@ -295,13 +367,11 @@
             pointer-events: none;
         }
 
-        /* Colorazioni semi */
         .suit-bastoni { color: #5d4037; }
         .suit-coppe { color: #c62828; }
         .suit-denari { color: #f57f17; }
         .suit-spade { color: #1565c0; }
 
-        /* --- DORSO CARTE --- */
         .card.back {
             background: 
                 radial-gradient(circle, #3a2b1f 0%, #17110c 100%),
@@ -595,7 +665,6 @@
             to { opacity: 1; }
         }
 
-        /* --- ANIMAZIONI TRASLAZIONE CARTE --- */
         .animated-card-flyer {
             position: fixed;
             z-index: 9999;
@@ -636,9 +705,26 @@
 </head>
 <body>
 
+    <!-- SCHERMATA INIZIALE -->
+    <div id="start-screen" class="start-screen">
+        <div class="start-title">Ruba Dungeon</div>
+        <div class="start-subtitle">Scegli la difficoltà per iniziare</div>
+        <div class="mode-selection-container">
+            <button class="btn-mode" onclick="selectModeAndStart('Facile')">
+                <span>MODALITÀ FACILE</span>
+                <span class="btn-mode-desc">Sfida bilanciata per tutti</span>
+            </button>
+            <button class="btn-mode" onclick="selectModeAndStart('Difficile')">
+                <span>MODALITÀ DIFFICILE</span>
+                <span class="btn-mode-desc">Costo oro raddoppiato & nemici più ostici</span>
+            </button>
+        </div>
+    </div>
+
     <header>
         <h1>★ Ruba Dungeon ★</h1>
         <div class="header-actions">
+            <button id="btn-show-menu" class="header-btn" onclick="showStartMenu()">Menu</button>
             <button id="btn-restart" class="header-btn btn-action" onclick="initGame()">Nuova Partita</button>
             <button id="btn-toggle-mode" class="header-btn" onclick="toggleMode()">Modo: Facile</button>
         </div>
@@ -703,7 +789,7 @@
         </div>
     </div>
 
-    <div id="log">Tocca la casella "Dungeon" per pescare una carta evento!</div>
+    <div id="log">Scegli una modalità per iniziare.</div>
 
     <script>
         const SUITS = { BASTONI: 'Bastoni', COPPE: 'Coppe', DENARI: 'Denari', SPADE: 'Spade' };
@@ -762,10 +848,12 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        // Funzione per il rendering del dorso della carta con contatore posizionato in basso
+        // Funzione per il rendering del dorso della carta con contatore in parentesi ()
         function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '') {
             let backClass = isEnemy ? 'enemy-back' : 'back';
-            let subText = countText ? `<div class="card-back-count">${countText}</div>` : '';
+            let subText = countText !== undefined && countText !== null && countText !== '' 
+                ? `<div class="card-back-count">(${countText})</div>` 
+                : '';
             return `
                 <div class="card ${backClass} ${extraClasses}">
                     <div class="card-back-pattern">
@@ -774,6 +862,17 @@
                     </div>
                 </div>
             `;
+        }
+
+        function selectModeAndStart(selectedMode) {
+            mode = selectedMode;
+            document.getElementById('btn-toggle-mode').innerText = `Modo: ${mode}`;
+            document.getElementById('start-screen').style.display = 'none';
+            initGame();
+        }
+
+        function showStartMenu() {
+            document.getElementById('start-screen').style.display = 'flex';
         }
 
         function toggleMode() {
@@ -964,6 +1063,8 @@
             let eventClickFn = '';
             let extraCardClass = '';
 
+            let totalEventPilaCount = carteEventoPila.length + (cartaEventoCorrente ? 1 : 0);
+
             if (cartaEventoCorrente) {
                 if (cartaEventoCorrente.suit === SUITS.DENARI) {
                     eventClickFn = 'collectDenariEvent()';
@@ -978,7 +1079,7 @@
             }
 
             document.getElementById('card-event').innerHTML = topEventCard 
-                ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
+                ? renderCardHTML(topEventCard, `(${totalEventPilaCount})`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
                 : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('Scarta Qui', '', false, 'event-discardable') : '');
 
             let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
@@ -1731,8 +1832,6 @@
             }
             updateUI();
         }
-
-        window.onload = initGame;
     </script>
 </body>
 </html>
