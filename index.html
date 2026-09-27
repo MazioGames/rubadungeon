@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -6,11 +6,12 @@
     <title>Ruba Dungeon</title>
     <style>
         :root {
-            --bg-color: #1e1915;
-            --card-bg: #fdf6e3;
-            --text-color: #2c251e;
+            --bg-color: #140f0c;
+            --board-bg: #221811;
+            --card-bg: #f9f3e5;
+            --text-color: #1c140e;
             --primary-color: #8b0000;
-            --accent-color: #d9a05b;
+            --accent-color: #e5a95d;
             --selected-border: #00e676;
             --enemy-color: #801818;
             --hero-dice-bg: #00bcd4;
@@ -39,7 +40,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 3px;
+            padding: 4px;
             touch-action: manipulation;
         }
 
@@ -49,50 +50,61 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 4px;
-            gap: 4px;
+            padding: 0 6px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 6px;
+            border: 1px solid #3c2a1e;
         }
 
         h1 {
             color: var(--accent-color);
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
+            font-size: 1rem;
+            letter-spacing: 1px;
             white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .header-btn {
-            background: #3e352b;
+            background: #2d2219;
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
-            padding: 3px 8px;
-            font-size: 0.7rem;
+            padding: 4px 10px;
+            font-size: 0.72rem;
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
             white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+
+        .header-btn:active {
+            transform: scale(0.95);
         }
 
         .header-btn.btn-action {
             background: var(--primary-color);
             color: #fff;
+            border-color: #ff5555;
         }
 
         .status-bar {
             display: flex;
             justify-content: space-around;
             align-items: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 1px 4px;
+            background: linear-gradient(180deg, #1f1610 0%, #120c08 100%);
+            padding: 2px 6px;
             border-radius: 6px;
-            border: 1px solid var(--accent-color);
-            font-size: 0.7rem;
-            height: 3.5vh;
+            border: 1px solid #4a3525;
+            font-size: 0.72rem;
+            height: 3.8vh;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
         }
 
         .status-item {
@@ -110,48 +122,53 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
-            gap: 3px;
-            height: 76vh;
-            background: #2b221b;
-            padding: 3px;
-            border-radius: 8px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            gap: 4px;
+            height: 75vh;
+            background: radial-gradient(circle, #2d2017 0%, #17100a 100%);
+            padding: 4px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+            border: 1px solid #3d2b1f;
             position: relative;
         }
 
         .slot {
-            border: 1px dashed #5c4d3c;
-            border-radius: 6px;
+            border: 1px dashed #4d3828;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            background: rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.3);
             padding: 2px;
             overflow: hidden;
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
         }
 
         .slot.empty {
             border: none;
             background: transparent;
+            box-shadow: none;
         }
 
         .slot-dice {
             border: none !important;
             background: transparent !important;
+            box-shadow: none !important;
         }
 
         .slot-title {
             position: absolute;
             top: 2px;
-            left: 3px;
+            left: 4px;
             font-size: 0.52rem;
             color: var(--accent-color);
             text-transform: uppercase;
             font-weight: bold;
             pointer-events: none;
             z-index: 2;
-            text-shadow: 0 1px 2px #000;
+            text-shadow: 0 1px 3px #000;
+            letter-spacing: 0.5px;
         }
 
         .card-container {
@@ -161,10 +178,7 @@
             height: 100%;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 10px;
-            padding-bottom: 2px;
-            padding-left: 2px;
-            padding-right: 2px;
+            padding: 11px 2px 2px 2px;
             overflow-x: auto;
             scroll-behavior: smooth;
         }
@@ -178,7 +192,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
+            gap: 3px;
             margin-right: auto;
             padding-left: 2px;
         }
@@ -186,13 +200,13 @@
         .hp-dice {
             width: 22px;
             height: 22px;
-            border-radius: 4px;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
             font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.7);
             cursor: pointer;
         }
 
@@ -216,38 +230,39 @@
             border-radius: 2px;
         }
 
-        /* --- DESIGN NUOVO DELLE CARTE DA GIOCO --- */
+        /* --- DESIGN DELLE CARTE --- */
         .card {
             width: 52px;
-            height: 92%;
+            height: 94%;
             max-height: 100px;
-            background-color: var(--card-bg);
+            background: linear-gradient(135deg, #ffffff 0%, #f1e6d0 100%);
             color: var(--text-color);
-            border-radius: 5px;
-            border: 1.5px solid #000;
+            border-radius: 6px;
+            border: 1px solid #1a130d;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 2px 3px;
+            padding: 3px;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 0 2px rgba(255,255,255,0.8);
             cursor: pointer;
-            transition: transform 0.1s, border-color 0.1s;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             flex-shrink: 0;
             position: relative;
         }
 
         .card.selected {
             border: 2px solid var(--selected-border);
-            transform: translateY(-4px);
-            box-shadow: 0 0 10px var(--selected-border);
+            transform: translateY(-5px);
+            box-shadow: 0 0 12px var(--selected-border), 0 4px 8px rgba(0,0,0,0.8);
         }
 
         .card-corner {
             display: flex;
             flex-direction: column;
             align-items: center;
-            line-height: 1;
+            line-height: 0.95;
+            z-index: 2;
         }
 
         .card-corner.top-left {
@@ -260,13 +275,14 @@
         }
 
         .card-val {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 800;
+            font-family: 'Georgia', serif;
         }
 
         .card-suit-symbol {
             font-size: 0.75rem;
-            margin-top: -1px;
+            margin-top: 1px;
         }
 
         .card-center-icon {
@@ -274,46 +290,42 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.1rem;
-            opacity: 0.18;
+            font-size: 1.3rem;
+            opacity: 0.22;
             pointer-events: none;
         }
 
-        /* Colorazioni semi per chiarezza */
-        .suit-bastoni { color: #2e7d32; }
-        .suit-coppe { color: #c62828; }
-        .suit-denari { color: #f57f17; }
-        .suit-spade { color: #1565c0; }
+        /* Colorazioni semi */
+        .suit-bastoni { color: #5d4037; } /* Marrone per il bastone */
+        .suit-coppe { color: #c62828; }   /* Rosso per le coppe */
+        .suit-denari { color: #f57f17; }  /* Giallo/Oro per i denari */
+        .suit-spade { color: #1565c0; }   /* Blu per le spade */
 
-        /* --- STILI DEL DORSO DELLE CARTE --- */
+        /* --- DORSO CARTE --- */
         .card.back {
             background: 
                 radial-gradient(circle, #3a2b1f 0%, #17110c 100%),
-                repeating-linear-gradient(45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px),
-                repeating-linear-gradient(-45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px);
-            border: 2px solid var(--accent-color);
+                repeating-linear-gradient(45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px);
+            border: 1.5px solid var(--accent-color);
             color: var(--accent-color);
             justify-content: center;
             align-items: center;
             font-size: 0.65rem;
             text-align: center;
-            line-height: 1.1;
             box-shadow: inset 0 0 0 2px #120e0c, 0 3px 6px rgba(0,0,0,0.8);
         }
 
         .card.enemy-back {
             background: 
                 radial-gradient(circle, #801818 0%, #300000 100%),
-                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px),
-                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px);
-            border: 2px solid #ff8888;
+                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px);
+            border: 1.5px solid #ff8888;
             color: #ffffff;
             justify-content: center;
             align-items: center;
             font-size: 0.65rem;
             text-align: center;
             width: 52px;
-            line-height: 1.1;
             box-shadow: inset 0 0 0 2px #200000, 0 3px 6px rgba(0,0,0,0.8);
         }
 
@@ -321,7 +333,7 @@
             width: 100%;
             height: 100%;
             border: 1px solid rgba(217, 160, 91, 0.4);
-            border-radius: 3px;
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -341,7 +353,7 @@
 
         @keyframes pulse-glow-enemy {
             from { box-shadow: 0 0 4px #ff3333; }
-            to { box-shadow: 0 0 12px #ff8888; }
+            to { box-shadow: 0 0 14px #ff8888; }
         }
 
         .dungeon-drawable {
@@ -351,7 +363,7 @@
 
         @keyframes pulse-glow-dungeon {
             from { box-shadow: 0 0 4px #d9a05b; }
-            to { box-shadow: 0 0 12px #ffd700; }
+            to { box-shadow: 0 0 14px #ffd700; }
         }
 
         .event-discardable {
@@ -361,7 +373,7 @@
 
         @keyframes pulse-glow-event {
             from { box-shadow: 0 0 4px #00e676; }
-            to { box-shadow: 0 0 12px #00e676; }
+            to { box-shadow: 0 0 14px #00e676; }
         }
 
         .gold-drawable {
@@ -377,7 +389,7 @@
             }
             to { 
                 box-shadow: 0 0 14px #ffd700, 0 0 22px #ff8c00; 
-                transform: scale(1.05);
+                transform: scale(1.04);
             }
         }
 
@@ -410,29 +422,27 @@
         }
 
         .dice-box {
-            width: 62px;
-            height: 62px;
+            width: 58px;
+            height: 58px;
             background: #ffffff;
             border: none !important;
-            outline: none !important;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.2rem;
+            font-size: 3rem;
             line-height: 1;
             color: #111111;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .dice-slot.active .dice-box {
-            box-shadow: 0 0 14px var(--accent-color), 0 4px 10px rgba(0,0,0,0.6);
-            opacity: 1;
+            box-shadow: 0 0 14px var(--accent-color), 0 4px 10px rgba(0,0,0,0.7);
         }
 
         .dice-slot.disabled .dice-box {
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
             box-shadow: none;
         }
@@ -457,7 +467,7 @@
 
         @keyframes dice-roll {
             0% { transform: rotate3d(1, 1, 0, 0deg) scale(0.9); }
-            25% { transform: rotate3d(1, 2, 1, 180deg) scale(1.2); }
+            25% { transform: rotate3d(1, 2, 1, 180deg) scale(1.15); }
             50% { transform: rotate3d(2, 1, 2, 360deg) scale(1.1); }
             75% { transform: rotate3d(1, 3, 1, 540deg) scale(1.05); }
             100% { transform: rotate3d(0, 0, 0, 720deg) scale(1); }
@@ -465,29 +475,31 @@
 
         #log {
             height: 14vh;
-            background: #120e0c;
-            border: 1px solid #5c4d3c;
+            background: #0d0a08;
+            border: 1px solid #3d2b1f;
             border-radius: 6px;
-            padding: 4px 6px;
+            padding: 5px 8px;
             overflow-y: auto;
             font-family: monospace;
-            font-size: 0.65rem;
-            color: #d9a05b;
-            line-height: 1.25;
+            font-size: 0.68rem;
+            color: #e5a95d;
+            line-height: 1.3;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
         }
 
         .badge {
             font-size: 0.5rem;
             background: var(--accent-color);
             color: #000;
-            padding: 1px 2px;
-            border-radius: 2px;
+            padding: 1px 3px;
+            border-radius: 3px;
             position: absolute;
             bottom: 2px;
             left: 50%;
             transform: translateX(-50%);
             white-space: nowrap;
             z-index: 2;
+            font-weight: bold;
         }
 
         .defeat-overlay, .victory-overlay {
@@ -502,7 +514,7 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
-            border-radius: 8px;
+            border-radius: 10px;
             animation: fadeIn 0.4s ease-in-out;
             padding: 10px;
         }
@@ -563,7 +575,7 @@
             to { opacity: 1; }
         }
 
-        /* --- STILI ANIMAZIONI TRASLAZIONE CARTE --- */
+        /* --- ANIMAZIONI TRASLAZIONE CARTE --- */
         .animated-card-flyer {
             position: fixed;
             z-index: 9999;
@@ -590,7 +602,7 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            border-radius: 5px;
+            border-radius: 6px;
         }
 
         .animated-card-back {
@@ -676,9 +688,9 @@
     <script>
         const SUITS = { BASTONI: 'Bastoni', COPPE: 'Coppe', DENARI: 'Denari', SPADE: 'Spade' };
         
-        // MAFFATURA DEI SIMBOLI DEI SEMI
+        // NUOVO SIMBOLO BASTONI (Sostituito il fiore ♣ con un bastone/manganello 🪵)
         const SUIT_SYMBOLS = {
-            'Bastoni': '♣',
+            'Bastoni': '🪵',
             'Coppe': '🍷',
             'Denari': '🪙',
             'Spade': '⚔️'
@@ -862,7 +874,6 @@
             }
         }
 
-        /* ENGINE GENERICO ANIMAZIONI TRASLAZIONE CARTE */
         function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, onComplete }) {
             if (!startElem || !endElem) {
                 if (onComplete) onComplete();
@@ -923,14 +934,12 @@
             document.getElementById('relic-count').innerText = `${reliquieOttenute.length}/4`;
             document.getElementById('defeated-count').innerText = `${nemiciSconfittiTotali}/11`;
 
-            // Mazzo Dungeon
             let canClickDungeon = (canDrawEvent && !inCombattimento) || fasePostCombattimento;
             let dungeonClass = canClickDungeon ? 'dungeon-drawable' : '';
             document.getElementById('deck-dungeon').innerHTML = mazzoDungeon.length > 0 
                 ? renderCardBackHTML('1. Dungeon', mazzoDungeon.length, false, dungeonClass)
                 : '';
             
-            // Carta Evento / Pila Eventi
             let topEventCard = cartaEventoCorrente || (carteEventoPila.length > 0 ? carteEventoPila[carteEventoPila.length - 1] : null);
             let eventClickFn = '';
             let extraCardClass = '';
@@ -952,21 +961,18 @@
                 ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
                 : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('2. Scarta Qui', '', false, 'event-discardable') : '');
 
-            // Mazzo Nemici
             let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
             let enemyClass = canFightManual ? 'clickable-enemy-card' : '';
             document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 
                 ? renderCardBackHTML('3. Nemici', mazzoPersonaggi.length, true, enemyClass) 
                 : '';
             
-            // Slot Catacomba
             let catacombHTML = '';
             if (catacomba.length > 0) {
                 catacomba.forEach(c => { catacombHTML += renderCardHTML(c); });
             }
             document.getElementById('slot-catacomb').innerHTML = catacombHTML;
 
-            // Slot Nemico
             let enemyDiceVal = Math.max(1, Math.min(6, enemyHp || 1));
             let enemyDiceHTML = enemy ? `
                 <div class="hp-dice-group">
@@ -978,7 +984,6 @@
             reliquieOttenute.forEach(rel => { relicsHTML += renderCardHTML(rel); });
             document.getElementById('slot-relics').innerHTML = relicsHTML;
 
-            // Slot Eroe
             let currentHeroHp = Math.max(0, hero.hp);
             let d1 = Math.min(6, currentHeroHp);
             let d2 = Math.max(0, currentHeroHp - 6);
@@ -993,7 +998,6 @@
                 ? renderCardBackHTML('10. Reliquie', mazzoReliquie.length) 
                 : '';
 
-            // Slot Oro
             let goldHTML = '';
             carteOro.forEach(card => {
                 let isSel = carteOroSelezionate.includes(card.id);
@@ -1001,7 +1005,6 @@
             });
             document.getElementById('slot-gold').innerHTML = goldHTML;
 
-            // Slot Aiuti
             let aidHTML = '';
             carteAiuto.forEach(card => {
                 let isSel = carteAiutoSelezionate.includes(card.id);
@@ -1009,7 +1012,6 @@
             });
             document.getElementById('slot-aids').innerHTML = aidHTML;
 
-            // Carte Azione Eroe
             let heroActHTML = '';
             carteAzioneEroe.forEach((card) => {
                 let isSel = carteSelezionateEroe.includes(card.id);
@@ -1030,7 +1032,6 @@
             });
             document.getElementById('slot-hero-actions').innerHTML = heroActHTML;
 
-            // Carte Azione Nemico
             let enemyActHTML = '';
             if (inCombattimento) {
                 carteAzioneNemico.forEach((card, index) => {
@@ -1048,7 +1049,7 @@
             document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
         }
 
-        /* --- NUOVA FUNZIONE DI RENDERING DELLA CARTA --- */
+        /* --- RENDERING DELLA CARTA --- */
         function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
             if (!card) return '';
             let idAttr = elementId ? `id="${elementId}"` : '';
@@ -1553,7 +1554,6 @@
             let isHeroAttacking = (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI);
             let isEnemyAttacking = (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI);
 
-            // 1. SPADE VS BASTONI O BASTONI VS SPADE
             if ((hSuit === SUITS.SPADE && eSuit === SUITS.BASTONI) || (hSuit === SUITS.BASTONI && eSuit === SUITS.SPADE)) {
                 let heroDamageTaken = eVal;
                 let enemyDamageTaken = hVal;
@@ -1565,7 +1565,6 @@
                 return;
             }
 
-            // 2. BASTONI VS BASTONI (Parata/Contropiede)
             if (hSuit === SUITS.BASTONI && eSuit === SUITS.BASTONI) {
                 let diff = hVal - eVal;
                 if (diff > 0) {
@@ -1580,7 +1579,6 @@
                 return;
             }
 
-            // 3. DANNO/DIFESA DEL NEMICO
             if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
                 let damageToHero = Math.max(0, eVal - (hSuit === SUITS.DENARI ? hVal : 0));
                 hero.hp -= damageToHero;
@@ -1590,1651 +1588,6 @@
                 log(`Il Nemico gioca Coppe e si cura di ${eVal} HP. (HP Nemico: ${enemyHp}/${enemyMaxHp})`);
             }
 
-            // 4. DANNO/CURA DELL'EROE
-            if (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI) {
-                let damageToEnemy = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
-                enemyHp = Math.max(0, enemyHp - damageToEnemy);
-                log(`Attacchi con ${hSuit} e infliggi ${damageToEnemy} danni al Nemico!`);
-            } else if (hSuit === SUITS.COPPE) {
-                hero.hp = Math.min(hero.maxHp, hero.hp + hVal);
-                log(`Giochi Coppe e ti curi di ${hVal} HP! (HP Eroe: ${hero.hp}/${hero.maxHp})`);
-            }
-        }
-
-        function checkCombatStatus() {
-            if (enemyHp <= 0) {
-                log(`=== NEMICO SCONFIGGITO! ===`);
-                nemiciSconfittiTotali++;
-
-                if (enemy.value === 10) {
-                    let relIndex = mazzoReliquie.findIndex(r => r.suit === enemy.suit);
-                    if (relIndex !== -1) {
-                        let rel = mazzoReliquie.splice(relIndex, 1)[0];
-                        reliquieOttenute.push(rel);
-                        log(`★ OTTENUTA LA RELIQUIA DI ${enemy.suit}! ★`);
-                    }
-                    catacomba.push(enemy);
-                } else {
-                    carteAiuto.push(enemy);
-                    log(`Il nemico arruolato come Carta Aiuto.`);
-                }
-
-                if (cartaEventoCorrente) {
-                    carteEventoPila.push(cartaEventoCorrente);
-                    cartaEventoCorrente = null;
-                }
-
-                inCombattimento = false;
-                enemy = null;
-
-                if (carteAzioneNemico.length > 0) {
-                    carteEventoPila.push(...carteAzioneNemico);
-                    carteAzioneNemico = [];
-                }
-
-                if (checkWinCondition()) return;
-
-                fasePostCombattimento = true;
-                carteSelezionateEroe = [];
-                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "2. Eventi Pila". Per proseguire senza scarti (o dopo lo scarto), tocca "1. Dungeon".`);
-                updateUI();
-                return;
-            }
-
-            if (carteAzioneNemico.length === 0) {
-                log('Round finito! Preparazione nuove carte azione...');
-                setupCombatTurn();
-            } else {
-                updateUI();
-            }
-        }
-
-        function checkGameOver() {
-            if (hero.hp <= 0) {
-                hero.hp = 0;
-                updateUI();
-                log('☠ SCONFITTA! Il tuo eroe è caduto.');
-                document.getElementById('defeat-overlay').style.display = 'flex';
-                canDrawEvent = false;
-                setDiceEnabled(false);
-                return true;
-            }
-            return false;
-        }
-
-        function checkWinCondition() {
-            let won = false;
-            if (mode === 'Facile' && reliquieOttenute.length >= 4) {
-                won = true;
-            } else if (mode === 'Difficile' && nemiciSconfittiTotali >= 11) {
-                won = true;
-            }
-
-            if (won) {
-                log('🏆 VITTORIA COMPLETA! Hai conquistato tutte le Reliquie!');
-                showVictoryOverlay();
-                canDrawEvent = false;
-                setDiceEnabled(false);
-                return true;
-            }
-            return false;
-        }
-
-        function showVictoryOverlay() {
-            let relicContainer = document.getElementById('victory-relics');
-            let kingContainer = document.getElementById('victory-kings');
-
-            relicContainer.innerHTML = '';
-            kingContainer.innerHTML = '';
-
-            reliquieOttenute.forEach(rel => {
-                relicContainer.innerHTML += renderCardHTML(rel);
-            });
-
-            let kings = catacomba.filter(c => c.value === 10);
-            kings.forEach(king => {
-                kingContainer.innerHTML += renderCardHTML(king);
-            });
-
-            document.getElementById('victory-overlay').style.display = 'flex';
-        }
-
-        function endTurn(keepEventInPile = true) {
-            if (!inCombattimento && !fasePostCombattimento) {
-                if (keepEventInPile && cartaEventoCorrente) {
-                    if (cartaEventoCorrente.suit === SUITS.DENARI) {
-                        carteOro.push(cartaEventoCorrente);
-                    } else {
-                        carteEventoPila.push(cartaEventoCorrente);
-                    }
-                    cartaEventoCorrente = null;
-                }
-                canDrawEvent = true;
-                setDiceEnabled(false);
-            }
-            updateUI();
-        }
-
-        window.onload = initGame;
-    </script>
-</body>
-</html>
- html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ruba Dungeon</title>
-    <style>
-        :root {
-            --bg-color: #1e1915;
-            --card-bg: #fdf6e3;
-            --text-color: #2c251e;
-            --primary-color: #8b0000;
-            --accent-color: #d9a05b;
-            --selected-border: #00e676;
-            --enemy-color: #801818;
-            --hero-dice-bg: #00bcd4;
-            --hero-dice-text: #002233;
-            --hero-dice-border: #80deea;
-            --dice-success: #00e676;
-            --dice-fail: #ff3333;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            background-color: var(--bg-color);
-            color: #fdf6e3;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 3px;
-            touch-action: manipulation;
-        }
-
-        header {
-            text-align: center;
-            height: 4vh;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4px;
-            gap: 4px;
-        }
-
-        h1 {
-            color: var(--accent-color);
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .header-btn {
-            background: #3e352b;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 3px 8px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .header-btn.btn-action {
-            background: var(--primary-color);
-            color: #fff;
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 1px 4px;
-            border-radius: 6px;
-            border: 1px solid var(--accent-color);
-            font-size: 0.7rem;
-            height: 3.5vh;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .status-val {
-            font-weight: bold;
-            color: var(--accent-color);
-        }
-
-        .board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 3px;
-            height: 76vh;
-            background: #2b221b;
-            padding: 3px;
-            border-radius: 8px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
-            position: relative;
-        }
-
-        .slot {
-            border: 1px dashed #5c4d3c;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: rgba(0, 0, 0, 0.25);
-            padding: 2px;
-            overflow: hidden;
-        }
-
-        .slot.empty {
-            border: none;
-            background: transparent;
-        }
-
-        .slot-dice {
-            border: none !important;
-            background: transparent !important;
-        }
-
-        .slot-title {
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            font-size: 0.52rem;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 2;
-            text-shadow: 0 1px 2px #000;
-        }
-
-        .card-container {
-            display: flex;
-            gap: 4px;
-            width: 100%;
-            height: 100%;
-            align-items: center;
-            justify-content: flex-start;
-            padding-top: 10px;
-            padding-bottom: 2px;
-            padding-left: 2px;
-            padding-right: 2px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-        }
-
-        .card-container.shift-right {
-            justify-content: flex-end;
-        }
-
-        .hp-dice-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            margin-right: auto;
-            padding-left: 2px;
-        }
-
-        .hp-dice {
-            width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.6);
-            cursor: pointer;
-        }
-
-        .hp-dice.hero-dice {
-            background: var(--hero-dice-bg);
-            color: var(--hero-dice-text);
-            border: 1px solid var(--hero-dice-border);
-        }
-
-        .hp-dice.enemy-dice {
-            background: #801818;
-            color: #ffffff;
-            border: 1px solid #ff8888;
-        }
-
-        .card-container::-webkit-scrollbar {
-            height: 3px;
-        }
-        .card-container::-webkit-scrollbar-thumb {
-            background: var(--accent-color);
-            border-radius: 2px;
-        }
-
-        .card {
-            width: 52px;
-            height: 92%;
-            max-height: 100px;
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            border-radius: 5px;
-            border: 1.5px solid #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 3px 4px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.6);
-            cursor: pointer;
-            transition: transform 0.1s, border-color 0.1s;
-            flex-shrink: 0;
-            position: relative;
-        }
-
-        .card.selected {
-            border: 2px solid var(--selected-border);
-            transform: translateY(-4px);
-            box-shadow: 0 0 10px var(--selected-border);
-        }
-
-        /* --- STILI DEL DORSO DELLE CARTE --- */
-        .card.back {
-            background: 
-                radial-gradient(circle, #3a2b1f 0%, #17110c 100%),
-                repeating-linear-gradient(45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px),
-                repeating-linear-gradient(-45deg, rgba(217, 160, 91, 0.08) 0px, rgba(217, 160, 91, 0.08) 2px, transparent 2px, transparent 8px);
-            border: 2px solid var(--accent-color);
-            color: var(--accent-color);
-            justify-content: center;
-            align-items: center;
-            font-size: 0.65rem;
-            text-align: center;
-            line-height: 1.1;
-            box-shadow: inset 0 0 0 2px #120e0c, 0 3px 6px rgba(0,0,0,0.8);
-        }
-
-        .card.enemy-back {
-            background: 
-                radial-gradient(circle, #801818 0%, #300000 100%),
-                repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px),
-                repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0px, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 8px);
-            border: 2px solid #ff8888;
-            color: #ffffff;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.65rem;
-            text-align: center;
-            width: 52px;
-            line-height: 1.1;
-            box-shadow: inset 0 0 0 2px #200000, 0 3px 6px rgba(0,0,0,0.8);
-        }
-
-        .card-back-pattern {
-            width: 100%;
-            height: 100%;
-            border: 1px solid rgba(217, 160, 91, 0.4);
-            border-radius: 3px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2px;
-            pointer-events: none;
-        }
-
-        .enemy-back .card-back-pattern {
-            border-color: rgba(255, 136, 136, 0.5);
-        }
-
-        .clickable-enemy-card {
-            cursor: pointer;
-            animation: pulse-glow-enemy 1.2s infinite alternate;
-        }
-
-        @keyframes pulse-glow-enemy {
-            from { box-shadow: 0 0 4px #ff3333; }
-            to { box-shadow: 0 0 12px #ff8888; }
-        }
-
-        .dungeon-drawable {
-            cursor: pointer;
-            animation: pulse-glow-dungeon 1.5s infinite alternate;
-        }
-
-        @keyframes pulse-glow-dungeon {
-            from { box-shadow: 0 0 4px #d9a05b; }
-            to { box-shadow: 0 0 12px #ffd700; }
-        }
-
-        .event-discardable {
-            cursor: pointer;
-            animation: pulse-glow-event 1.2s infinite alternate;
-        }
-
-        @keyframes pulse-glow-event {
-            from { box-shadow: 0 0 4px #00e676; }
-            to { box-shadow: 0 0 12px #00e676; }
-        }
-
-        .gold-drawable {
-            cursor: pointer;
-            border-color: #ffd700 !important;
-            animation: pulse-glow-gold 1.2s infinite alternate;
-        }
-
-        @keyframes pulse-glow-gold {
-            from { 
-                box-shadow: 0 0 4px #ffd700, 0 0 8px #ffb700; 
-                transform: scale(1);
-            }
-            to { 
-                box-shadow: 0 0 14px #ffd700, 0 0 22px #ff8c00; 
-                transform: scale(1.05);
-            }
-        }
-
-        .card-val { font-size: 0.9rem; line-height: 1; }
-        .card-suit { font-size: 0.55rem; align-self: flex-end; text-transform: capitalize; }
-
-        .bonus-tag {
-            font-size: 0.6rem;
-            background: #00e676;
-            color: #000;
-            border-radius: 3px;
-            padding: 0 3px;
-            position: absolute;
-            bottom: 2px;
-            left: 2px;
-            font-weight: bold;
-        }
-
-        .span-2 { grid-column: span 2; }
-
-        .dice-slot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            perspective: 600px;
-        }
-
-        .dice-box {
-            width: 62px;
-            height: 62px;
-            background: #ffffff;
-            border: none !important;
-            outline: none !important;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.2rem;
-            line-height: 1;
-            color: #111111;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
-        }
-
-        .dice-slot.active .dice-box {
-            box-shadow: 0 0 14px var(--accent-color), 0 4px 10px rgba(0,0,0,0.6);
-            opacity: 1;
-        }
-
-        .dice-slot.disabled .dice-box {
-            opacity: 0.4;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .dice-box.rolling {
-            animation: dice-roll 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-            background: #ffffff !important;
-            color: #111111 !important;
-        }
-
-        .dice-box.success {
-            background-color: var(--dice-success) !important;
-            color: #000000 !important;
-            box-shadow: 0 0 18px var(--dice-success), 0 4px 12px rgba(0,0,0,0.7) !important;
-        }
-
-        .dice-box.fail {
-            background-color: var(--dice-fail) !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 18px var(--dice-fail), 0 4px 12px rgba(0,0,0,0.7) !important;
-        }
-
-        @keyframes dice-roll {
-            0% { transform: rotate3d(1, 1, 0, 0deg) scale(0.9); }
-            25% { transform: rotate3d(1, 2, 1, 180deg) scale(1.2); }
-            50% { transform: rotate3d(2, 1, 2, 360deg) scale(1.1); }
-            75% { transform: rotate3d(1, 3, 1, 540deg) scale(1.05); }
-            100% { transform: rotate3d(0, 0, 0, 720deg) scale(1); }
-        }
-
-        #log {
-            height: 14vh;
-            background: #120e0c;
-            border: 1px solid #5c4d3c;
-            border-radius: 6px;
-            padding: 4px 6px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.65rem;
-            color: #d9a05b;
-            line-height: 1.25;
-        }
-
-        .badge {
-            font-size: 0.55rem;
-            background: var(--accent-color);
-            color: #000;
-            padding: 1px 3px;
-            border-radius: 2px;
-            margin-top: 1px;
-            text-align: center;
-        }
-
-        .defeat-overlay, .victory-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.92);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 8px;
-            animation: fadeIn 0.4s ease-in-out;
-            padding: 10px;
-        }
-
-        .defeat-title {
-            font-size: 1.8rem;
-            color: #ff3333;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            text-shadow: 0 0 10px #ff0000;
-            margin-bottom: 8px;
-        }
-
-        .victory-title {
-            font-size: 1.8rem;
-            color: #ffd700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            text-shadow: 0 0 12px #ff8c00;
-            margin-bottom: 6px;
-        }
-
-        .victory-subtitle {
-            font-size: 0.8rem;
-            color: #d9a05b;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .trophy-section-title {
-            font-size: 0.65rem;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 6px;
-            margin-bottom: 4px;
-        }
-
-        .trophies-container {
-            display: flex;
-            gap: 6px;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-
-        .defeat-msg {
-            font-size: 0.85rem;
-            color: #ddd;
-            margin-bottom: 15px;
-            text-align: center;
-            padding: 0 10px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* --- STILI ANIMAZIONI TRASLAZIONE CARTE --- */
-        .animated-card-flyer {
-            position: fixed;
-            z-index: 9999;
-            pointer-events: none;
-            perspective: 1000px;
-            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .animated-card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .animated-card-inner.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .animated-card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            border-radius: 5px;
-        }
-
-        .animated-card-back {
-            transform: rotateY(0deg);
-        }
-
-        .animated-card-front {
-            transform: rotateY(180deg);
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>★ Ruba Dungeon ★</h1>
-        <div class="header-actions">
-            <button id="btn-restart" class="header-btn btn-action" onclick="initGame()">Nuova Partita</button>
-            <button id="btn-toggle-mode" class="header-btn" onclick="toggleMode()">Modo: Facile</button>
-        </div>
-    </header>
-    
-    <div class="status-bar">
-        <div class="status-item">Eroe HP: <span id="hero-hp" class="status-val">12/12</span></div>
-        <div class="status-item">Nemico HP: <span id="enemy-hp" class="status-val">-</span></div>
-        <div class="status-item">Oro: <span id="gold-count" class="status-val">0</span></div>
-        <div class="status-item">Reliquie: <span id="relic-count" class="status-val">0/4</span></div>
-        <div class="status-item">Sconfitti: <span id="defeated-count" class="status-val">0/11</span></div>
-    </div>
-
-    <div class="board" id="game-board">
-        <!-- RIGA 1 -->
-        <div class="slot" onclick="handleDungeonDeckClick()"><span class="slot-title">1. Dungeon</span><div id="deck-dungeon" class="card-container"></div></div>
-        <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">2. Eventi Pila</span><div id="card-event" class="card-container"></div></div>
-        <div class="slot" onclick="handleEnemyDeckClick()"><span class="slot-title">3. Nemici</span><div id="deck-characters" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">4. Catacomba</span><div id="slot-catacomb" class="card-container"></div></div>
-
-        <!-- RIGA 2 -->
-        <div class="slot empty"></div>
-        <div class="slot"><span class="slot-title">5. Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container"></div></div>
-
-        <!-- RIGA 3 -->
-        <div class="slot"><span class="slot-title">6. Reliquie</span><div id="slot-relics" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">7. Eroe</span><div id="slot-hero" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container"></div></div>
-
-        <!-- RIGA 4 -->
-        <div class="slot"><span class="slot-title">8. Oro</span><div id="slot-gold" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">9. Aiuti</span><div id="slot-aids" class="card-container"></div></div>
-        
-        <div class="slot slot-dice">
-            <div id="dice-container" class="dice-slot disabled" onclick="rollDiceTest()">
-                <div id="dice-box" class="dice-box">⚀</div>
-            </div>
-        </div>
-
-        <div class="slot"><span class="slot-title">10. Mazzo Reliquie</span><div id="deck-relics" class="card-container"></div></div>
-        
-        <!-- OVERLAY SCONFITTA -->
-        <div id="defeat-overlay" class="defeat-overlay" style="display: none;">
-            <div class="defeat-title">☠ SCONFITTA ☠</div>
-            <div class="defeat-msg">Il tuo Eroe è caduto nel Dungeon!</div>
-            <button onclick="initGame()" class="header-btn btn-action" style="padding: 8px 16px; font-size: 0.8rem;">Inizia Nuova Partita</button>
-        </div>
-
-        <!-- OVERLAY VITTORIA -->
-        <div id="victory-overlay" class="victory-overlay" style="display: none;">
-            <div class="victory-title">🏆 VITTORIA! 🏆</div>
-            <div class="victory-subtitle">Hai conquistato il Dungeon e sconfitto i 4 Re!</div>
-            
-            <div class="trophy-section-title">✨ Reliquie Conquistate ✨</div>
-            <div id="victory-relics" class="trophies-container"></div>
-
-            <div class="trophy-section-title">👑 Re Sconfitti 👑</div>
-            <div id="victory-kings" class="trophies-container"></div>
-
-            <button onclick="initGame()" class="header-btn btn-action" style="padding: 8px 16px; font-size: 0.85rem; margin-top: 10px;">Nuova Partita</button>
-        </div>
-    </div>
-
-    <div id="log">Tocca la casella "1. Dungeon" per pescare una carta evento!</div>
-
-    <script>
-        const SUITS = { BASTONI: 'Bastoni', COPPE: 'Coppe', DENARI: 'Denari', SPADE: 'Spade' };
-        const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-        
-        let hero = { hp: 12, maxHp: 12, card: null };
-        let enemy = null;
-        let enemyHp = 0;
-        let enemyMaxHp = 0;
-        let mode = 'Facile';
-        
-        let mazzoDungeon = [];
-        let mazzoPersonaggi = [];
-        let mazzoReliquie = [];
-        let carteEventoPila = [];
-        let catacomba = [];
-        
-        let cartaEventoCorrente = null;
-        let carteOro = [];
-        let carteOroSelezionate = [];
-        let reliquieOttenute = [];
-        
-        let carteAiuto = [];
-        let carteAiutoSelezionate = [];
-
-        let carteAzioneEroe = [];
-        let carteAzioneNemico = [];
-        let carteSelezionateEroe = [];
-
-        let inCombattimento = false;
-        let fasePostCombattimento = false;
-        let isRollingDice = false;
-        let diceEnabled = false;
-        let canDrawEvent = true;
-        let nemiciSconfittiTotali = 0;
-        let isAnimating = false;
-
-        function log(msg) {
-            const logDiv = document.getElementById('log');
-            logDiv.innerHTML += `<div>> ${msg}</div>`;
-            logDiv.scrollTop = logDiv.scrollHeight;
-        }
-
-        function renderCardBackHTML(title, countText, isEnemy = false, extraClasses = '') {
-            let backClass = isEnemy ? 'enemy-back' : 'back';
-            let subText = countText ? `<br>(${countText})` : '';
-            return `
-                <div class="card ${backClass} ${extraClasses}">
-                    <div class="card-back-pattern">
-                        <div>${title}</div>
-                        ${subText}
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleMode() {
-            if (inCombattimento || cartaEventoCorrente || fasePostCombattimento || isAnimating) {
-                log('Impossibile cambiare modalità a partita in corso.');
-                return;
-            }
-            mode = mode === 'Facile' ? 'Difficile' : 'Facile';
-            document.getElementById('btn-toggle-mode').innerText = `Modo: ${mode}`;
-            log(`Modalità impostata su: ${mode}`);
-            initGame();
-        }
-
-        function createDeck() {
-            let deck = [];
-            for (let suit in SUITS) {
-                for (let val = 1; val <= 10; val++) {
-                    deck.push({ suit: SUITS[suit], value: val, id: Math.random().toString(36).substr(2, 9) });
-                }
-            }
-            return deck;
-        }
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        function checkAndReplenishDungeonDeck() {
-            if (mazzoDungeon.length === 0) {
-                if (carteEventoPila.length === 0) {
-                    log('Nessuna carta rimasta per ricostruire il Mazzo Dungeon!');
-                    return false;
-                }
-                log('Mazzo Dungeon esaurito! Rimescolo la Pila Eventi...');
-                mazzoDungeon = [...carteEventoPila];
-                carteEventoPila = [];
-                shuffle(mazzoDungeon);
-            }
-            return true;
-        }
-
-        function resetDiceState() {
-            let diceBox = document.getElementById('dice-box');
-            diceBox.classList.remove('success', 'fail', 'rolling');
-        }
-
-        function initGame() {
-            document.getElementById('defeat-overlay').style.display = 'none';
-            document.getElementById('victory-overlay').style.display = 'none';
-            document.getElementById('log').innerHTML = '';
-            
-            let diceBox = document.getElementById('dice-box');
-            diceBox.innerText = '⚀';
-            resetDiceState();
-            
-            log(`Nuova partita iniziata (${mode})... Tocca il Mazzo Dungeon per pescare.`);
-
-            let fullDeck = createDeck();
-            shuffle(fullDeck);
-
-            let heroIndex = fullDeck.findIndex(c => c.value === 8 || c.value === 9);
-            hero.card = fullDeck.splice(heroIndex, 1)[0];
-            hero.hp = 12;
-
-            mazzoPersonaggi = fullDeck.filter(c => c.value >= 8 && c.value <= 10);
-            fullDeck = fullDeck.filter(c => !(c.value >= 8 && c.value <= 10));
-
-            mazzoReliquie = fullDeck.filter(c => c.value === 1);
-            fullDeck = fullDeck.filter(c => c.value !== 1);
-
-            mazzoDungeon = fullDeck;
-            carteEventoPila = [];
-            catacomba = [];
-            carteOro = [];
-            carteOroSelezionate = [];
-            reliquieOttenute = [];
-            carteAiuto = [];
-            carteAiutoSelezionate = [];
-            carteAzioneEroe = [];
-            carteAzioneNemico = [];
-            carteSelezionateEroe = [];
-            enemy = null;
-            cartaEventoCorrente = null;
-            inCombattimento = false;
-            fasePostCombattimento = false;
-            isRollingDice = false;
-            diceEnabled = false;
-            canDrawEvent = true;
-            nemiciSconfittiTotali = 0;
-            isAnimating = false;
-
-            updateUI();
-            log(`Eroe estratto: ${hero.card.value} di ${hero.card.suit}`);
-        }
-
-        function getTotalGold() {
-            return carteOro.reduce((sum, card) => sum + card.value, 0);
-        }
-
-        function getSelectedGoldValue() {
-            return carteOro
-                .filter(c => carteOroSelezionate.includes(c.id))
-                .reduce((sum, c) => sum + c.value, 0);
-        }
-
-        function setDiceEnabled(enabled) {
-            diceEnabled = enabled;
-            let diceContainer = document.getElementById('dice-container');
-            if (enabled) {
-                diceContainer.classList.remove('disabled');
-                diceContainer.classList.add('active');
-            } else {
-                diceContainer.classList.add('disabled');
-                diceContainer.classList.remove('active');
-            }
-        }
-
-        /* ENGINE GENERICO ANIMAZIONI TRASLAZIONE CARTE */
-        function animateCardMovement({ startElem, endElem, cardData, isFlipping = false, startFaceDown = false, onComplete }) {
-            if (!startElem || !endElem) {
-                if (onComplete) onComplete();
-                return;
-            }
-
-            isAnimating = true;
-
-            let startRect = startElem.getBoundingClientRect();
-            let endRect = endElem.getBoundingClientRect();
-
-            let flyer = document.createElement('div');
-            flyer.className = 'animated-card-flyer';
-            flyer.style.left = `${startRect.left}px`;
-            flyer.style.top = `${startRect.top}px`;
-            flyer.style.width = `${startRect.width || 52}px`;
-            flyer.style.height = `${startRect.height || 75}px`;
-
-            let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
-            let backHTML = renderCardBackHTML('Nemico', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
-
-            if (isFlipping) {
-                flyer.innerHTML = `
-                    <div class="animated-card-inner" id="anim-inner">
-                        <div class="animated-card-face animated-card-back">${startFaceDown ? backHTML : frontHTML}</div>
-                        <div class="animated-card-face animated-card-front">${startFaceDown ? frontHTML : backHTML}</div>
-                    </div>
-                `;
-            } else {
-                flyer.innerHTML = frontHTML;
-            }
-
-            document.body.appendChild(flyer);
-
-            requestAnimationFrame(() => {
-                flyer.style.left = `${endRect.left}px`;
-                flyer.style.top = `${endRect.top}px`;
-                if (endRect.width) flyer.style.width = `${endRect.width}px`;
-                if (endRect.height) flyer.style.height = `${endRect.height}px`;
-
-                if (isFlipping) {
-                    let inner = flyer.querySelector('#anim-inner');
-                    if (inner) inner.classList.add('flipped');
-                }
-            });
-
-            setTimeout(() => {
-                if (flyer.parentNode) flyer.parentNode.removeChild(flyer);
-                isAnimating = false;
-                if (onComplete) onComplete();
-            }, 600);
-        }
-
-        function updateUI() {
-            document.getElementById('hero-hp').innerText = `${Math.max(0, hero.hp)}/12`;
-            document.getElementById('enemy-hp').innerText = enemy ? `${enemyHp}/${enemyMaxHp}` : '-';
-            document.getElementById('gold-count').innerText = getTotalGold();
-            document.getElementById('relic-count').innerText = `${reliquieOttenute.length}/4`;
-            document.getElementById('defeated-count').innerText = `${nemiciSconfittiTotali}/11`;
-
-            // Mazzo Dungeon
-            let canClickDungeon = (canDrawEvent && !inCombattimento) || fasePostCombattimento;
-            let dungeonClass = canClickDungeon ? 'dungeon-drawable' : '';
-            document.getElementById('deck-dungeon').innerHTML = mazzoDungeon.length > 0 
-                ? renderCardBackHTML('1. Dungeon', mazzoDungeon.length, false, dungeonClass)
-                : '';
-            
-            // Carta Evento / Pila Eventi
-            let topEventCard = cartaEventoCorrente || (carteEventoPila.length > 0 ? carteEventoPila[carteEventoPila.length - 1] : null);
-            let eventClickFn = '';
-            let extraCardClass = '';
-
-            if (cartaEventoCorrente) {
-                if (cartaEventoCorrente.suit === SUITS.DENARI) {
-                    eventClickFn = 'collectDenariEvent()';
-                    extraCardClass = 'gold-drawable';
-                } else if (cartaEventoCorrente.suit === SUITS.SPADE) {
-                    eventClickFn = 'handleSpadeEventClick()';
-                } else if (cartaEventoCorrente.suit === SUITS.COPPE || cartaEventoCorrente.suit === SUITS.BASTONI) {
-                    eventClickFn = 'handleNonCombatEventWithGold()';
-                }
-            } else if (fasePostCombattimento && carteSelezionateEroe.length > 0) {
-                extraCardClass = 'event-discardable';
-            }
-
-            document.getElementById('card-event').innerHTML = topEventCard 
-                ? renderCardHTML(topEventCard, `x${carteEventoPila.length + (cartaEventoCorrente ? 1 : 0)}`, false, eventClickFn, '', extraCardClass, 'current-event-card') 
-                : (fasePostCombattimento && carteSelezionateEroe.length > 0 ? renderCardBackHTML('2. Scarta Qui', '', false, 'event-discardable') : '');
-
-            // Mazzo Nemici
-            let canFightManual = (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento);
-            let enemyClass = canFightManual ? 'clickable-enemy-card' : '';
-            document.getElementById('deck-characters').innerHTML = mazzoPersonaggi.length > 0 
-                ? renderCardBackHTML('3. Nemici', mazzoPersonaggi.length, true, enemyClass) 
-                : '';
-            
-            // Slot Catacomba
-            let catacombHTML = '';
-            if (catacomba.length > 0) {
-                catacomba.forEach(c => { catacombHTML += renderCardHTML(c); });
-            }
-            document.getElementById('slot-catacomb').innerHTML = catacombHTML;
-
-            // Slot Nemico
-            let enemyDiceVal = Math.max(1, Math.min(6, enemyHp || 1));
-            let enemyDiceHTML = enemy ? `
-                <div class="hp-dice-group">
-                    <div class="hp-dice enemy-dice">${DICE_FACES[enemyDiceVal - 1]}</div>
-                </div>` : '';
-            document.getElementById('slot-enemy').innerHTML = enemy ? enemyDiceHTML + renderCardHTML(enemy, '', false, '', '', '', 'slot-enemy-card') : '';
-
-            let relicsHTML = '';
-            reliquieOttenute.forEach(rel => { relicsHTML += renderCardHTML(rel); });
-            document.getElementById('slot-relics').innerHTML = relicsHTML;
-
-            // Slot Eroe
-            let currentHeroHp = Math.max(0, hero.hp);
-            let d1 = Math.min(6, currentHeroHp);
-            let d2 = Math.max(0, currentHeroHp - 6);
-            let heroDiceHTML = `
-                <div class="hp-dice-group">
-                    <div class="hp-dice hero-dice">${DICE_FACES[d1 > 0 ? d1 - 1 : 0]}</div>
-                    ${d2 > 0 ? `<div class="hp-dice hero-dice">${DICE_FACES[d2 - 1]}</div>` : ''}
-                </div>`;
-            document.getElementById('slot-hero').innerHTML = heroDiceHTML + renderCardHTML(hero.card);
-
-            document.getElementById('deck-relics').innerHTML = mazzoReliquie.length > 0 
-                ? renderCardBackHTML('10. Reliquie', mazzoReliquie.length) 
-                : '';
-
-            // Slot Oro
-            let goldHTML = '';
-            carteOro.forEach(card => {
-                let isSel = carteOroSelezionate.includes(card.id);
-                goldHTML += renderCardHTML(card, '', isSel, `toggleSelectGold('${card.id}')`, '', '', `gold-card-${card.id}`);
-            });
-            document.getElementById('slot-gold').innerHTML = goldHTML;
-
-            // Slot Aiuti
-            let aidHTML = '';
-            carteAiuto.forEach(card => {
-                let isSel = carteAiutoSelezionate.includes(card.id);
-                aidHTML += renderCardHTML(card, '', isSel, `toggleSelectAid('${card.id}')`);
-            });
-            document.getElementById('slot-aids').innerHTML = aidHTML;
-
-            // Carte Azione Eroe
-            let heroActHTML = '';
-            carteAzioneEroe.forEach((card) => {
-                let isSel = carteSelezionateEroe.includes(card.id);
-                let extraTag = '';
-
-                if (inCombattimento) {
-                    let hasRelic = reliquieOttenute.some(r => r.suit === card.suit) ? 1 : 0;
-                    let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
-                    let aidBonus = selectedAids.filter(a => a.suit === card.suit).length;
-                    let totalBonus = hasRelic + aidBonus;
-
-                    if (totalBonus > 0) {
-                        extraTag = `<div class="bonus-tag">+${totalBonus}</div>`;
-                    }
-                }
-
-                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`);
-            });
-            document.getElementById('slot-hero-actions').innerHTML = heroActHTML;
-
-            // Carte Azione Nemico
-            let enemyActHTML = '';
-            if (inCombattimento) {
-                carteAzioneNemico.forEach((card, index) => {
-                    let isTopTargetCard = (index === carteAzioneNemico.length - 1);
-                    let isClickableClass = (isTopTargetCard && carteSelezionateEroe.length > 0) ? 'clickable-enemy-card' : '';
-                    let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
-
-                    if (card.revealed) {
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', '', isClickableClass, cardElementId);
-                    } else {
-                        enemyActHTML += renderCardBackHTML('Nemico', '', true);
-                    }
-                });
-            }
-            document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
-        }
-
-        function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
-            if (!card) return '';
-            let idAttr = elementId ? `id="${elementId}"` : '';
-            return `
-                <div ${idAttr} class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}">
-                    <div class="card-val">${card.value}</div>
-                    <div class="card-suit">${card.suit}</div>
-                    ${badge ? `<div class="badge">${badge}</div>` : ''}
-                    ${extraHTML}
-                </div>
-            `;
-        }
-
-        function collectDenariEvent() {
-            if (!cartaEventoCorrente || cartaEventoCorrente.suit !== SUITS.DENARI || isAnimating) return;
-
-            let cardToCollect = cartaEventoCorrente;
-            let startElem = document.getElementById('current-event-card') || document.getElementById('card-event');
-            let endElem = document.getElementById('slot-gold');
-
-            log(`Hai raccolto la carta Denari (+${cardToCollect.value})!`);
-
-            animateCardMovement({
-                startElem: startElem,
-                endElem: endElem,
-                cardData: cardToCollect,
-                onComplete: () => {
-                    carteOro.push(cardToCollect);
-                    cartaEventoCorrente = null;
-                    canDrawEvent = true;
-                    updateUI();
-                }
-            });
-        }
-
-        function toggleSelectGold(id) {
-            if (inCombattimento || fasePostCombattimento || isAnimating) return;
-            if (carteOroSelezionate.includes(id)) {
-                carteOroSelezionate = carteOroSelezionate.filter(i => i !== id);
-            } else {
-                carteOroSelezionate.push(id);
-            }
-            updateUI();
-        }
-
-        function toggleSelectAid(id) {
-            if (isAnimating) return;
-            if (carteAiutoSelezionate.includes(id)) {
-                carteAiutoSelezionate = carteAiutoSelezionate.filter(i => i !== id);
-            } else {
-                carteAiutoSelezionate.push(id);
-            }
-            updateUI();
-        }
-
-        function handleSpadeEventClick() {
-            if (!cartaEventoCorrente || cartaEventoCorrente.suit !== SUITS.SPADE || inCombattimento || isAnimating) return;
-
-            let selectedVal = getSelectedGoldValue();
-            let vce = cartaEventoCorrente.value;
-            let requiredGold = (mode === 'Difficile') ? vce * 2 : vce;
-
-            if (selectedVal === 0) {
-                log('Seleziona le carte Oro nella casella Oro prima di toccare la carta Spade!');
-                return;
-            }
-
-            if (selectedVal === requiredGold) {
-                log(`Hai pagato l'Oro esatto (${selectedVal})! Eviti il combattimento.`);
-                payGoldSelectedAndDiscard(() => { endTurn(true); });
-            } else if (selectedVal > requiredGold) {
-                log(`Oro selezionato (${selectedVal}) > costo (${requiredGold}). Tentativo di CORRUZIONE!`);
-                payGoldSelectedAndDiscard(() => {
-                    if (mazzoPersonaggi.length === 0) {
-                        log('Nessun nemico rimasto!');
-                        endTurn(true);
-                        return;
-                    }
-
-                    let candidateEnemy = mazzoPersonaggi.pop();
-                    log(`Corruzione diretta su: ${candidateEnemy.value} di ${candidateEnemy.suit}...`);
-
-                    if (candidateEnemy.value === 8 || candidateEnemy.value === 9) {
-                        carteAiuto.push(candidateEnemy);
-                        log(`★ CORRUZIONE RIUSCITA! ★ Il nemico diviene una Carta Aiuto!`);
-                        nemiciSconfittiTotali++;
-                        endTurn(true);
-                    } else {
-                        log(`☠ CORRUZIONE FALLITA! Il Re (10) è INCORRUTTIBILE! Si combatte!`);
-                        enemy = candidateEnemy;
-                        enemyMaxHp = mode === 'Facile' ? 6 : 10;
-                        enemyHp = enemyMaxHp;
-                        inCombattimento = true;
-                        canDrawEvent = false;
-                        setDiceEnabled(false);
-                        
-                        let startElem = document.getElementById('deck-characters');
-                        let endElem = document.getElementById('slot-enemy');
-                        enemy.isEnemy = true;
-
-                        animateCardMovement({
-                            startElem: startElem,
-                            endElem: endElem,
-                            cardData: enemy,
-                            isFlipping: true,
-                            startFaceDown: true,
-                            onComplete: () => { setupCombatTurn(); }
-                        });
-                    }
-                });
-            } else {
-                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro o combatti il Nemico!`);
-            }
-        }
-
-        function handleNonCombatEventWithGold() {
-            if (!cartaEventoCorrente || inCombattimento || isRollingDice || isAnimating) return;
-            if (cartaEventoCorrente.suit !== SUITS.COPPE && cartaEventoCorrente.suit !== SUITS.BASTONI) return;
-
-            let selectedVal = getSelectedGoldValue();
-            let vce = cartaEventoCorrente.value;
-            let requiredGold = (mode === 'Difficile') ? vce * 2 : vce;
-
-            if (selectedVal === 0) {
-                log('Seleziona prima le carte Oro nella casella Oro, poi tocca l\'Evento per risolverlo con l\'Oro oppure lancia il Dado!');
-                return;
-            }
-
-            if (selectedVal >= requiredGold) {
-                log(`Hai risolto l'evento ${cartaEventoCorrente.suit} (${vce}) pagando ${selectedVal} Oro!`);
-                payGoldSelectedAndDiscard(() => { endTurn(true); });
-            } else {
-                log(`Oro insufficiente (${selectedVal}/${requiredGold}). Seleziona più Oro oppure lancia il Dado per il test.`);
-            }
-        }
-
-        function payGoldSelectedAndDiscard(onComplete) {
-            let selectedCards = carteOro.filter(c => carteOroSelezionate.includes(c.id));
-            if (selectedCards.length === 0) {
-                if (onComplete) onComplete();
-                return;
-            }
-
-            let endElem = document.getElementById('card-event');
-            let completed = 0;
-
-            selectedCards.forEach(card => {
-                let startElem = document.getElementById(`gold-card-${card.id}`) || document.getElementById('slot-gold');
-                animateCardMovement({
-                    startElem: startElem,
-                    endElem: endElem,
-                    cardData: card,
-                    onComplete: () => {
-                        completed++;
-                        if (completed === selectedCards.length) {
-                            carteOro = carteOro.filter(c => !carteOroSelezionate.includes(c.id));
-                            carteEventoPila.push(...selectedCards);
-                            carteOroSelezionate = [];
-                            updateUI();
-                            if (onComplete) onComplete();
-                        }
-                    }
-                });
-            });
-        }
-
-        function handleDungeonDeckClick() {
-            if (inCombattimento || isRollingDice || isAnimating) return;
-
-            if (fasePostCombattimento) {
-                if (carteSelezionateEroe.length > 0) {
-                    log('Hai carte azione selezionate! Tocca la casella "2. Eventi Pila" per scartarle, oppure deselezionale prima di proseguire.');
-                    return;
-                }
-                fasePostCombattimento = false;
-                canDrawEvent = true;
-                log('Prosegui la spedizione!');
-                drawEventWithAnimation();
-                return;
-            }
-
-            if (!canDrawEvent) return;
-            drawEventWithAnimation();
-        }
-
-        function handleEventPileClick() {
-            if (!fasePostCombattimento || isAnimating) return;
-
-            if (carteSelezionateEroe.length > 0) {
-                let discarded = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
-                let endElem = document.getElementById('card-event');
-                let completed = 0;
-
-                discarded.forEach(card => {
-                    let startElem = document.getElementById(`hero-act-${card.id}`) || document.getElementById('slot-hero-actions');
-                    animateCardMovement({
-                        startElem: startElem,
-                        endElem: endElem,
-                        cardData: card,
-                        onComplete: () => {
-                            completed++;
-                            if (completed === discarded.length) {
-                                carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
-                                carteEventoPila.push(...discarded);
-                                log(`Hai scartato ${discarded.length} carte azione nella Pila Eventi.`);
-                                carteSelezionateEroe = [];
-                                updateUI();
-                            }
-                        }
-                    });
-                });
-            } else {
-                log('Seleziona prima le carte azione che desideri scartare, poi tocca qui.');
-            }
-        }
-
-        function drawEventWithAnimation() {
-            if (!checkAndReplenishDungeonDeck()) return;
-
-            let sourceElem = document.getElementById('deck-dungeon');
-            let targetElem = document.getElementById('card-event');
-            let drawnCard = mazzoDungeon.pop();
-
-            animateCardMovement({
-                startElem: sourceElem,
-                endElem: targetElem,
-                cardData: drawnCard,
-                isFlipping: true,
-                startFaceDown: true,
-                onComplete: () => { processDrawnEvent(drawnCard); }
-            });
-        }
-
-        function processDrawnEvent(drawnCard) {
-            resetDiceState();
-            cartaEventoCorrente = drawnCard;
-            carteOroSelezionate = [];
-            
-            log(`Evento pescato dal Mazzo Dungeon: ${cartaEventoCorrente.value} di ${cartaEventoCorrente.suit}`);
-
-            let requiredGold = (mode === 'Difficile') 
-                ? cartaEventoCorrente.value * 2 
-                : cartaEventoCorrente.value;
-
-            if (cartaEventoCorrente.suit === SUITS.DENARI) {
-                log(`Trovata Carta Oro! Tocca la carta Denari lampeggiante negli Eventi per portarla nell'Oro.`);
-                canDrawEvent = false;
-                setDiceEnabled(false);
-            } else if (cartaEventoCorrente.suit === SUITS.SPADE) {
-                let totalGoldAvailable = getTotalGold();
-                setDiceEnabled(false);
-
-                if (totalGoldAvailable < requiredGold) {
-                    log(`Nemico ingaggiato! Oro insufficiente. Inizia il combattimento!`);
-                    canDrawEvent = false;
-                    startCombat();
-                } else {
-                    log(`Nemico avvistato! Seleziona l'Oro e tocca la carta Spade per Pagarlo/Corromperlo, OPPURE tocca il Mazzo Nemici per combattere.`);
-                    canDrawEvent = false;
-                }
-            } else {
-                log(`Tocca il DADO per il Test OPPURE seleziona Carte Oro e tocca l'Evento per superarlo senza rischi (Costo: ${requiredGold} Oro).`);
-                canDrawEvent = false;
-                setDiceEnabled(true);
-            }
-            updateUI();
-        }
-
-        function handleEnemyDeckClick() {
-            if (isAnimating) return;
-            if (cartaEventoCorrente && cartaEventoCorrente.suit === SUITS.SPADE && !inCombattimento && !fasePostCombattimento) {
-                log('Hai scelto di affrontare il Nemico! Avvio Combattimento...');
-                startCombat();
-            }
-        }
-
-        function rollDiceTest() {
-            if (!diceEnabled || isRollingDice || isAnimating) return;
-
-            isRollingDice = true;
-            setDiceEnabled(false);
-
-            let diceBox = document.getElementById('dice-box');
-            resetDiceState();
-            diceBox.classList.add('rolling');
-
-            let rollInterval = setInterval(() => {
-                let randomFace = DICE_FACES[Math.floor(Math.random() * 6)];
-                diceBox.innerText = randomFace;
-            }, 70);
-
-            setTimeout(() => {
-                clearInterval(rollInterval);
-                diceBox.classList.remove('rolling');
-
-                let roll = Math.floor(Math.random() * 6) + 1;
-                diceBox.innerText = DICE_FACES[roll - 1];
-
-                let vce = cartaEventoCorrente.value;
-                let success = (roll === 6 || (roll !== 1 && roll >= vce));
-
-                if (success) {
-                    diceBox.classList.add('success');
-                    log(`Risultato Dado: ${roll} ${DICE_FACES[roll - 1]} ➔ Test SUPERATO!`);
-                    if (cartaEventoCorrente.suit === SUITS.COPPE) {
-                        hero.hp = Math.min(hero.maxHp, hero.hp + vce);
-                        log(`Punti Vita recuperati: +${vce}. HP: ${hero.hp}`);
-                    }
-                } else {
-                    diceBox.classList.add('fail');
-                    log(`Risultato Dado: ${roll} ${DICE_FACES[roll - 1]} ➔ Test FALLITO!`);
-                    let damage = Math.floor(vce / 2);
-                    if (cartaEventoCorrente.suit === SUITS.BASTONI || cartaEventoCorrente.suit === SUITS.COPPE) {
-                        hero.hp -= damage;
-                        log(`Danni subiti: ${damage}. HP: ${hero.hp}`);
-                    }
-                }
-
-                isRollingDice = false;
-                if (checkGameOver()) return;
-                endTurn(true);
-            }, 600);
-        }
-
-        function startCombat() {
-            if (mazzoPersonaggi.length === 0) {
-                log('Tutti i nemici del mazzo sono stati affrontati!');
-                endTurn(true);
-                return;
-            }
-
-            inCombattimento = true;
-            canDrawEvent = false;
-            enemy = mazzoPersonaggi.pop();
-            enemy.isEnemy = true;
-            
-            enemyMaxHp = mode === 'Facile' ? 6 : (enemy.value === 8 ? 8 : enemy.value === 9 ? 9 : 10);
-            enemyHp = enemyMaxHp;
-
-            let rankName = enemy.value === 8 ? 'Fante' : enemy.value === 9 ? 'Cavaliere' : 'Re';
-            log(`ENTRI IN COMBATTIMENTO contro ${rankName}: ${enemy.value} di ${enemy.suit} (${enemyHp}/${enemyMaxHp} HP)!`);
-
-            setDiceEnabled(false);
-
-            let startElem = document.getElementById('deck-characters');
-            let endElem = document.getElementById('slot-enemy');
-
-            animateCardMovement({
-                startElem: startElem,
-                endElem: endElem,
-                cardData: enemy,
-                isFlipping: true,
-                startFaceDown: true,
-                onComplete: () => { setupCombatTurn(); }
-            });
-        }
-
-        function revealTopEnemyAction() {
-            if (carteAzioneNemico.length > 0) {
-                let topCard = carteAzioneNemico[carteAzioneNemico.length - 1];
-                if (!topCard.revealed) {
-                    topCard.revealed = true;
-                }
-            }
-        }
-
-        function setupCombatTurn() {
-            while (carteAzioneEroe.length < 3) {
-                if (!checkAndReplenishDungeonDeck()) break;
-                carteAzioneEroe.push(mazzoDungeon.pop());
-            }
-
-            carteAzioneNemico = [];
-            for (let i = 0; i < 3; i++) {
-                if (!checkAndReplenishDungeonDeck()) break;
-                let c = mazzoDungeon.pop();
-                c.revealed = false;
-                carteAzioneNemico.push(c);
-            }
-
-            revealTopEnemyAction();
-
-            carteSelezionateEroe = [];
-            log('Seleziona la tua Carta Azione Eroe, poi tocca la Carta Nemico svelata per giocare!');
-            updateUI();
-        }
-
-        function selectHeroAction(id) {
-            if (isAnimating) return;
-            let card = carteAzioneEroe.find(c => c.id === id);
-            if (!card) return;
-
-            if (fasePostCombattimento) {
-                if (carteSelezionateEroe.includes(id)) {
-                    carteSelezionateEroe = carteSelezionateEroe.filter(i => i !== id);
-                } else {
-                    carteSelezionateEroe.push(id);
-                }
-                updateUI();
-                return;
-            }
-
-            if (!inCombattimento) return;
-
-            if (carteSelezionateEroe.includes(id)) {
-                carteSelezionateEroe = carteSelezionateEroe.filter(i => i !== id);
-            } else {
-                if (carteSelezionateEroe.length > 0) {
-                    let firstCard = carteAzioneEroe.find(c => c.id === carteSelezionateEroe[0]);
-                    if (firstCard.value !== card.value) {
-                        carteSelezionateEroe = [id];
-                    } else {
-                        carteSelezionateEroe.push(id);
-                    }
-                } else {
-                    carteSelezionateEroe.push(id);
-                }
-            }
-            updateUI();
-        }
-
-        function handleEnemyCardClick() {
-            if (!inCombattimento || isAnimating) return;
-
-            if (carteSelezionateEroe.length === 0) {
-                log('Seleziona prima una tua Carta Azione Eroe da giocare!');
-                return;
-            }
-
-            playSelectedHeroCards();
-        }
-
-        function playSelectedHeroCards() {
-            if (carteSelezionateEroe.length === 0 || carteAzioneNemico.length === 0) return;
-
-            let heroCardsPlayed = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
-            let primaryHeroCard = heroCardsPlayed[0];
-
-            let startElem = document.getElementById(`hero-act-${primaryHeroCard.id}`) || document.getElementById('slot-hero-actions');
-            let endElem = document.getElementById('top-enemy-action-card') || document.getElementById('slot-enemy-actions');
-
-            animateCardMovement({
-                startElem: startElem,
-                endElem: endElem,
-                cardData: primaryHeroCard,
-                onComplete: () => {
-                    let enemyCardPlayed = carteAzioneNemico.pop();
-                    delete enemyCardPlayed.revealed;
-
-                    let chosenSuit = heroCardsPlayed[0].suit;
-                    let heroBaseValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
-                    
-                    let relicBonus = reliquieOttenute.filter(r => r.suit === chosenSuit).length;
-                    
-                    let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
-                    let matchingAids = selectedAids.filter(a => a.suit === chosenSuit);
-                    let aidBonus = matchingAids.length;
-
-                    if (aidBonus > 0) {
-                        carteAiuto = carteAiuto.filter(a => !matchingAids.map(m => m.id).includes(a.id));
-                        catacomba.push(...matchingAids);
-                        log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})!`);
-                    }
-                    carteAiutoSelezionate = [];
-
-                    let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
-                    let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
-                    let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
-
-                    log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
-                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue})`);
-
-                    resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
-
-                    carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
-                    carteSelezionateEroe = [];
-
-                    carteEventoPila.push(enemyCardPlayed, ...heroCardsPlayed);
-
-                    if (checkGameOver()) return;
-
-                    revealTopEnemyAction();
-                    checkCombatStatus();
-                }
-            });
-        }
-
-        function resolveCombatExchange(hSuit, hVal, eSuit, eVal) {
-            let isHeroAttacking = (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI);
-            let isEnemyAttacking = (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI);
-
-            // 1. SPADE VS BASTONI O BASTONI VS SPADE
-            if ((hSuit === SUITS.SPADE && eSuit === SUITS.BASTONI) || (hSuit === SUITS.BASTONI && eSuit === SUITS.SPADE)) {
-                let heroDamageTaken = eVal;
-                let enemyDamageTaken = hVal;
-
-                hero.hp -= heroDamageTaken;
-                enemyHp = Math.max(0, enemyHp - enemyDamageTaken);
-
-                log(`Scontro frontale ${hSuit} vs ${eSuit}! L'Eroe subisce ${heroDamageTaken} danni e il Nemico subisce ${enemyDamageTaken} danni!`);
-                return;
-            }
-
-            // 2. BASTONI VS BASTONI (Parata/Contropiede)
-            if (hSuit === SUITS.BASTONI && eSuit === SUITS.BASTONI) {
-                let diff = hVal - eVal;
-                if (diff > 0) {
-                    enemyHp = Math.max(0, enemyHp - diff);
-                    log(`Parata perfetta con Bastoni! Contropiedi e infliggi ${diff} danni!`);
-                } else if (diff < 0) {
-                    hero.hp -= Math.abs(diff);
-                    log(`Il Nemico ti sopraffà con Bastoni e ti infligge ${Math.abs(diff)} danni!`);
-                } else {
-                    log('Parata reciproca con Bastoni! Nessun danno inflitto.');
-                }
-                return;
-            }
-
-            // 3. DANNO/DIFESA DEL NEMICO
-            if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
-                let damageToHero = Math.max(0, eVal - (hSuit === SUITS.DENARI ? hVal : 0));
-                hero.hp -= damageToHero;
-                log(`L'attacco del Nemico (${eSuit}) ti infligge ${damageToHero} danni.`);
-            } else if (eSuit === SUITS.COPPE) {
-                enemyHp = Math.min(enemyMaxHp, enemyHp + eVal);
-                log(`Il Nemico gioca Coppe e si cura di ${eVal} HP. (HP Nemico: ${enemyHp}/${enemyMaxHp})`);
-            }
-
-            // 4. DANNO/CURA DELL'EROE
             if (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI) {
                 let damageToEnemy = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
                 enemyHp = Math.max(0, enemyHp - damageToEnemy);
