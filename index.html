@@ -246,7 +246,6 @@
             justify-content: flex-end;
         }
 
-        /* SOVRAPPOSIZIONE A CASCATA (STACKING) PER LE CARTE */
         .card-container.stacked-container {
             gap: 0;
             display: flex;
@@ -267,7 +266,6 @@
             transform: translateY(-6px);
         }
 
-        /* CONTENITORE AZIONI NEMICO DA DESTRA A SINISTRA */
         .enemy-actions-container {
             display: flex;
             flex-direction: row-reverse;
@@ -275,7 +273,6 @@
             gap: 6px;
         }
 
-        /* STACKING DUELLO SCONTRO FISSO PER COLONNE */
         .clash-stack-wrapper {
             position: relative;
             width: 52px;
@@ -337,7 +334,6 @@
             border: 1px solid #ff8888;
         }
 
-        /* CARTE E DORSO CARTE */
         .card {
             width: 52px;
             height: 94%;
@@ -887,6 +883,7 @@
         let mazzoReliquie = [];
         let carteEventoPila = [];
         let catacomba = [];
+        let reSconfitti = [];
         
         let cartaEventoCorrente = null;
         let carteOro = [];
@@ -900,7 +897,6 @@
         let carteAzioneNemico = [];
         let carteSelezionateEroe = [];
 
-        // Gestione storico scontri giocate nel combattimento corrente
         let scontriGiocati = []; 
 
         let inCombattimento = false;
@@ -1020,6 +1016,7 @@
             mazzoDungeon = fullDeck;
             carteEventoPila = [];
             catacomba = [];
+            reSconfitti = [];
             carteOro = [];
             carteOroSelezionate = [];
             reliquieOttenute = [];
@@ -1243,7 +1240,6 @@
 
                 if (inCombattimento) {
                     let cardSuitForBonus = card.suit;
-                    // Se fa parte di una selezione combo, il seme considerato per i bonus è quello della PRIMA carta selezionata
                     if (isSel && carteSelezionateEroe.length > 0) {
                         let firstSelCard = carteAzioneEroe.find(c => c.id === carteSelezionateEroe[0]);
                         if (firstSelCard) cardSuitForBonus = firstSelCard.suit;
@@ -1265,12 +1261,10 @@
 
             let enemyActHTML = '';
             if (inCombattimento) {
-                // Costruzione 3 slot colonne per le carte azione nemico/eroe (da destra verso sinistra)
                 for (let col = 0; col < 3; col++) {
                     let clashPlayed = scontriGiocati[col];
                     
                     if (clashPlayed) {
-                        // Carta Nemico già giocata in questo slot
                         let prevEnemyCard = clashPlayed.enemyCard;
                         let prevEnemyTag = '';
                         if (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) {
@@ -1278,7 +1272,6 @@
                         }
                         let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', `played-enemy-card-${col}`);
 
-                        // Carta Eroe giocata in questo slot sovrapposta
                         let heroOverlayHTML = '';
                         if (clashPlayed.heroCards && clashPlayed.heroCards.length > 0) {
                             let primaryHeroCard = clashPlayed.heroCards[0];
@@ -1292,7 +1285,6 @@
                             </div>
                         `;
                     } else if (carteAzioneNemico.length > 0) {
-                        // Slot con carta del nemico non ancora risolta
                         let activeIndexInRemaining = carteAzioneNemico.length - 1;
                         let isCurrentTarget = (col === scontriGiocati.length);
 
@@ -1312,7 +1304,6 @@
                                 </div>
                             `;
                         } else {
-                            // Slot per le carte successive del nemico ancora coperte
                             enemyActHTML += `
                                 <div class="clash-stack-wrapper" id="enemy-slot-col-${col}">
                                     ${renderCardBackHTML('Nemico', '', true)}
@@ -1326,7 +1317,6 @@
         }
 
         function getCardGraphicContent(card, symbol, suitClass) {
-            // Asso / Reliquia (Valore 1)
             if (card.value === 1) {
                 return `
                     <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
@@ -1337,7 +1327,6 @@
                     </svg>
                 `;
             }
-            // Fante (Valore 8)
             if (card.value === 8) {
                 return `
                     <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
@@ -1357,7 +1346,6 @@
                     </svg>
                 `;
             }
-            // Cavaliere (Valore 9)
             if (card.value === 9) {
                 return `
                     <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
@@ -1371,7 +1359,6 @@
                     </svg>
                 `;
             }
-            // Re (Valore 10)
             if (card.value === 10) {
                 return `
                     <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
@@ -1872,14 +1859,12 @@
 
             let currentColIndex = scontriGiocati.length;
             
-            // Mantiene l'ordine esatto di selezione delle carte eroe
             let heroCardsPlayed = carteSelezionateEroe
                 .map(id => carteAzioneEroe.find(c => c.id === id))
                 .filter(Boolean);
 
             let primaryHeroCard = heroCardsPlayed.length > 0 ? heroCardsPlayed[0] : null;
 
-            // Prepara l'oggetto carta per l'animazione riflettendo la prima carta selezionata
             let animHeroCard = primaryHeroCard;
             if (heroCardsPlayed.length > 1) {
                 let comboValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
@@ -1903,7 +1888,6 @@
                     let enemyCardPlayed = carteAzioneNemico.pop();
                     delete enemyCardPlayed.revealed;
 
-                    // Il seme giocato è determinato dalla PRIMA carta selezionata
                     let chosenSuit = primaryHeroCard ? primaryHeroCard.suit : null;
                     let heroBaseValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
                     
@@ -1941,8 +1925,6 @@
                     carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
                     carteSelezionateEroe = [];
 
-                    // Salva lo scontro nello storico per mantenerlo bloccato nel suo slot colonna specifico
-                    // In caso di combo, visualizza la carta sovrapposta col seme della prima carta scelta e il valore combinato
                     let visualHeroCards = heroCardsPlayed;
                     if (heroCardsPlayed.length > 1) {
                         visualHeroCards = [{
@@ -1978,9 +1960,6 @@
                 }
                 return;
             }
-
-            let isHeroAttacking = (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI);
-            let isEnemyAttacking = (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI);
 
             if ((hSuit === SUITS.SPADE && eSuit === SUITS.BASTONI) || (hSuit === SUITS.BASTONI && eSuit === SUITS.SPADE)) {
                 let heroDamageTaken = eVal;
@@ -2019,59 +1998,53 @@
             if (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI) {
                 let damageToEnemy = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
                 enemyHp = Math.max(0, enemyHp - damageToEnemy);
-                log(`Attacchi con ${hSuit} e infliggi ${damageToEnemy} danni al Nemico!`);
+                log(`Il tuo attacco (${hSuit}) infligge ${damageToEnemy} danni al Nemico.`);
             } else if (hSuit === SUITS.COPPE) {
                 hero.hp = Math.min(hero.maxHp, hero.hp + hVal);
-                log(`Giochi Coppe e ti curi di ${hVal} HP! (HP Eroe: ${hero.hp}/${hero.maxHp})`);
+                log(`Giochi Coppe e recuperi ${hVal} HP.`);
             }
         }
 
         function checkCombatStatus() {
+            if (checkGameOver()) return;
+
             if (enemyHp <= 0) {
-                log(`=== NEMICO SCONFIGGITO! ===`);
+                log(`★ NEMICO SCONFITTO! ★ (${enemy.value} di ${enemy.suit})`);
                 nemiciSconfittiTotali++;
+                
+                catacomba.push(enemy);
 
                 if (enemy.value === 10) {
-                    let relIndex = mazzoReliquie.findIndex(r => r.suit === enemy.suit);
-                    if (relIndex !== -1) {
-                        let rel = mazzoReliquie.splice(relIndex, 1)[0];
-                        reliquieOttenute.push(rel);
-                        log(`★ OTTENUTA LA RELIQUIA DI ${enemy.suit}! ★`);
+                    reSconfitti.push(enemy);
+                    let matchingRelicIndex = mazzoReliquie.findIndex(r => r.suit === enemy.suit);
+                    if (matchingRelicIndex !== -1) {
+                        let relicEarned = mazzoReliquie.splice(matchingRelicIndex, 1)[0];
+                        reliquieOttenute.push(relicEarned);
+                        log(`👑 Sconfitto il Re di ${enemy.suit}! Ottieni la Reliquia di ${enemy.suit}!`);
                     }
-                    carteAiuto.push(enemy);
-                    log(`Il Re sconfitto diviene una Carta Aiuto!`);
-                } else {
-                    carteAiuto.push(enemy);
-                    log(`Il nemico arruolato come Carta Aiuto.`);
                 }
+
+                if (reSconfitti.length === 4) {
+                    showVictoryOverlay();
+                    return;
+                }
+
+                enemy = null;
+                inCombattimento = false;
+                fasePostCombattimento = true;
 
                 if (cartaEventoCorrente) {
                     carteEventoPila.push(cartaEventoCorrente);
                     cartaEventoCorrente = null;
                 }
 
-                inCombattimento = false;
-                enemy = null;
-
-                if (carteAzioneNemico.length > 0) {
-                    carteEventoPila.push(...carteAzioneNemico);
-                    carteAzioneNemico = [];
-                }
-
-                clearAllClashesToEvents();
-
-                if (checkWinCondition()) return;
-
-                fasePostCombattimento = true;
-                carteSelezionateEroe = [];
-                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "Evento". Per proseguire senza scarti (o dopo lo scarto), tocca "Dungeon".`);
+                log('Combattimento vinto! Seleziona eventuali Carte Azione Eroe rimanenti da scartare nella Pila Eventi, oppure tocca il Mazzo Dungeon per continuare.');
                 updateUI();
                 return;
             }
 
-            if (carteAzioneNemico.length === 0) {
-                log('Round finito! Carte dello scontro scartate negli Eventi. Preparazione nuove carte azione...');
-                clearAllClashesToEvents();
+            if (scontriGiocati.length >= 3 || carteAzioneNemico.length === 0) {
+                log('Round completato. Preparazione del turno successivo...');
                 setupCombatTurn();
             } else {
                 updateUI();
@@ -2082,71 +2055,34 @@
             if (hero.hp <= 0) {
                 hero.hp = 0;
                 updateUI();
-                log('☠ SCONFITTA! Il tuo eroe è caduto.');
                 document.getElementById('defeat-overlay').style.display = 'flex';
-                canDrawEvent = false;
-                setDiceEnabled(false);
-                return true;
-            }
-            return false;
-        }
-
-        function checkWinCondition() {
-            let won = false;
-            if (mode === 'Facile' && reliquieOttenute.length >= 4) {
-                won = true;
-            } else if (mode === 'Difficile' && nemiciSconfittiTotali >= 11) {
-                won = true;
-            }
-
-            if (won) {
-                log('🏆 VITTORIA COMPLETA! Hai conquistato tutte le Reliquie!');
-                showVictoryOverlay();
-                canDrawEvent = false;
-                setDiceEnabled(false);
                 return true;
             }
             return false;
         }
 
         function showVictoryOverlay() {
-            let relicContainer = document.getElementById('victory-relics');
-            let kingContainer = document.getElementById('victory-kings');
+            let relicsContainer = document.getElementById('victory-relics');
+            let kingsContainer = document.getElementById('victory-kings');
 
-            relicContainer.innerHTML = '';
-            kingContainer.innerHTML = '';
-
-            reliquieOttenute.forEach(rel => {
-                relicContainer.innerHTML += renderCardHTML(rel);
-            });
-
-            let kingsInAid = carteAiuto.filter(c => c.value === 10);
-            let kingsInCatacomb = catacomba.filter(c => c.value === 10);
-            let allKings = [...kingsInAid, ...kingsInCatacomb];
-
-            allKings.forEach(king => {
-                kingContainer.innerHTML += renderCardHTML(king);
-            });
+            relicsContainer.innerHTML = reliquieOttenute.map(r => renderCardHTML(r)).join('');
+            kingsContainer.innerHTML = reSconfitti.map(k => renderCardHTML(k)).join('');
 
             document.getElementById('victory-overlay').style.display = 'flex';
         }
 
-        function endTurn(keepEventInPile = true) {
-            if (!inCombattimento && !fasePostCombattimento) {
-                if (keepEventInPile && cartaEventoCorrente) {
-                    if (cartaEventoCorrente.suit === SUITS.DENARI) {
-                        carteOro.push(cartaEventoCorrente);
-                    } else {
-                        carteEventoPila.push(cartaEventoCorrente);
-                    }
-                    cartaEventoCorrente = null;
-                }
-                clearAllClashesToEvents();
-                canDrawEvent = true;
-                setDiceEnabled(false);
+        function endTurn(clearCurrentEvent = false) {
+            if (clearCurrentEvent && cartaEventoCorrente) {
+                carteEventoPila.push(cartaEventoCorrente);
+                cartaEventoCorrente = null;
             }
+            canDrawEvent = true;
             updateUI();
         }
+
+        window.onload = function() {
+            showStartMenu();
+        };
     </script>
 </body>
 </html>
