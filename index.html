@@ -267,6 +267,14 @@
             transform: translateY(-6px);
         }
 
+        /* CONTENITORE AZIONI NEMICO DA DESTRA A SINISTRA */
+        .enemy-actions-container {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+            gap: 6px;
+        }
+
         /* STACKING DUELLO SCONTRO FISSO PER COLONNE */
         .clash-stack-wrapper {
             position: relative;
@@ -806,7 +814,7 @@
         <!-- RIGA 2 -->
         <div class="slot empty"></div>
         <div class="slot"><span class="slot-title">Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container"></div></div>
+        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container enemy-actions-container"></div></div>
 
         <!-- RIGA 3 -->
         <div class="slot"><span class="slot-title">Reliquie</span><div id="slot-relics" class="card-container stacked-container"></div></div>
@@ -1250,7 +1258,7 @@
 
             let enemyActHTML = '';
             if (inCombattimento) {
-                // Costruzione 3 slot colonne per le carte azione nemico/eroe
+                // Costruzione 3 slot colonne per le carte azione nemico/eroe (da destra verso sinistra)
                 for (let col = 0; col < 3; col++) {
                     let clashPlayed = scontriGiocati[col];
                     
@@ -1263,7 +1271,7 @@
                         }
                         let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', `played-enemy-card-${col}`);
 
-                        // Carta Eroe giocate in questo slot sovrapposta
+                        // Carta Eroe giocata in questo slot sovrapposta
                         let heroOverlayHTML = '';
                         if (clashPlayed.heroCards && clashPlayed.heroCards.length > 0) {
                             let primaryHeroCard = clashPlayed.heroCards[0];
@@ -1278,7 +1286,6 @@
                         `;
                     } else if (carteAzioneNemico.length > 0) {
                         // Slot con carta del nemico non ancora risolta
-                        // La prima carta azione non risolta si trova nell'indice (3 - scontriGiocati.length - 1)
                         let activeIndexInRemaining = carteAzioneNemico.length - 1;
                         let isCurrentTarget = (col === scontriGiocati.length);
 
