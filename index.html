@@ -1242,9 +1242,16 @@
                 let extraTag = '';
 
                 if (inCombattimento) {
-                    let hasRelic = reliquieOttenute.some(r => r.suit === card.suit) ? 1 : 0;
+                    let cardSuitForBonus = card.suit;
+                    // Se fa parte di una selezione combo, il seme considerato per i bonus è quello della PRIMA carta selezionata
+                    if (isSel && carteSelezionateEroe.length > 0) {
+                        let firstSelCard = carteAzioneEroe.find(c => c.id === carteSelezionateEroe[0]);
+                        if (firstSelCard) cardSuitForBonus = firstSelCard.suit;
+                    }
+
+                    let hasRelic = reliquieOttenute.some(r => r.suit === cardSuitForBonus) ? 1 : 0;
                     let selectedAids = carteAiuto.filter(a => carteAiutoSelezionate.includes(a.id));
-                    let aidBonus = selectedAids.filter(a => a.suit === card.suit).length;
+                    let aidBonus = selectedAids.filter(a => a.suit === cardSuitForBonus).length;
                     let totalBonus = hasRelic + aidBonus;
 
                     if (totalBonus > 0) {
@@ -1864,8 +1871,24 @@
             if (carteAzioneNemico.length === 0) return;
 
             let currentColIndex = scontriGiocati.length;
-            let heroCardsPlayed = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
+            
+            // Mantiene l'ordine esatto di selezione delle carte eroe
+            let heroCardsPlayed = carteSelezionateEroe
+                .map(id => carteAzioneEroe.find(c => c.id === id))
+                .filter(Boolean);
+
             let primaryHeroCard = heroCardsPlayed.length > 0 ? heroCardsPlayed[0] : null;
+
+            // Prepara l'oggetto carta per l'animazione riflettendo la prima carta selezionata
+            let animHeroCard = primaryHeroCard;
+            if (heroCardsPlayed.length > 1) {
+                let comboValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
+                animHeroCard = {
+                    ...primaryHeroCard,
+                    value: comboValue,
+                    suit: primaryHeroCard.suit
+                };
+            }
 
             let startElem = primaryHeroCard 
                 ? (document.getElementById(`hero-act-${primaryHeroCard.id}`) || document.getElementById('slot-hero-actions'))
@@ -1875,12 +1898,13 @@
             animateCardMovement({
                 startElem: startElem,
                 endElem: endElem,
-                cardData: primaryHeroCard,
+                cardData: animHeroCard,
                 onComplete: () => {
                     let enemyCardPlayed = carteAzioneNemico.pop();
                     delete enemyCardPlayed.revealed;
 
-                    let chosenSuit = heroCardsPlayed.length > 0 ? heroCardsPlayed[0].suit : null;
+                    // Il seme giocato è determinato dalla PRIMA carta selezionata
+                    let chosenSuit = primaryHeroCard ? primaryHeroCard.suit : null;
                     let heroBaseValue = heroCardsPlayed.reduce((sum, c) => sum + c.value, 0);
                     
                     let relicBonus = chosenSuit ? reliquieOttenute.filter(r => r.suit === chosenSuit).length : 0;
@@ -1902,7 +1926,11 @@
                     let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
 
                     if (heroCardsPlayed.length > 0) {
-                        log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
+                        if (heroCardsPlayed.length > 1) {
+                            log(`Combo giocata! L'Eroe usa ${heroCardsPlayed.length} carte con seme dominante ${chosenSuit} (Valore base: ${heroBaseValue}, Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
+                        } else {
+                            log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
+                        }
                     } else {
                         log(`L'Eroe non ha carte da giocare ed incassa il colpo del Nemico!`);
                     }
@@ -1914,9 +1942,19 @@
                     carteSelezionateEroe = [];
 
                     // Salva lo scontro nello storico per mantenerlo bloccato nel suo slot colonna specifico
+                    // In caso di combo, visualizza la carta sovrapposta col seme della prima carta scelta e il valore combinato
+                    let visualHeroCards = heroCardsPlayed;
+                    if (heroCardsPlayed.length > 1) {
+                        visualHeroCards = [{
+                            ...primaryHeroCard,
+                            value: heroBaseValue,
+                            suit: chosenSuit
+                        }];
+                    }
+
                     scontriGiocati.push({
                         enemyCard: enemyCardPlayed,
-                        heroCards: heroCardsPlayed
+                        heroCards: visualHeroCards
                     });
 
                     if (checkGameOver()) return;
