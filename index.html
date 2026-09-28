@@ -240,6 +240,7 @@
             overflow-x: auto;
             scroll-behavior: smooth;
             position: relative;
+            gap: 4px;
         }
 
         .card-container.shift-right {
@@ -248,6 +249,7 @@
 
         /* SOVRAPPOSIZIONE A CASCATA (STACKING) PER LE CARTE */
         .card-container.stacked-container {
+            gap: 0;
             display: flex;
             align-items: center;
             justify-content: flex-start;
@@ -789,12 +791,12 @@
         <!-- RIGA 2 -->
         <div class="slot empty"></div>
         <div class="slot"><span class="slot-title">Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container stacked-container"></div></div>
+        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container"></div></div>
 
         <!-- RIGA 3 -->
         <div class="slot"><span class="slot-title">Reliquie</span><div id="slot-relics" class="card-container stacked-container"></div></div>
         <div class="slot"><span class="slot-title">Eroe</span><div id="slot-hero" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container stacked-container"></div></div>
+        <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container"></div></div>
 
         <!-- RIGA 4 -->
         <div class="slot"><span class="slot-title">Oro</span><div id="slot-gold" class="card-container stacked-container"></div></div>
@@ -806,7 +808,7 @@
             </div>
         </div>
 
-        <div class="slot"><span class="slot-title">Mazzo Reliquie</span><div id="deck-relics" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Mazzo Reliquie</span><div id="deck-relics" class="card-container stacked-container"></div></div>
         
         <!-- OVERLAY SCONFITTA -->
         <div id="defeat-overlay" class="defeat-overlay" style="display: none;">
@@ -1175,9 +1177,11 @@
                 </div>`;
             document.getElementById('slot-hero').innerHTML = heroDiceHTML + renderCardHTML(hero.card);
 
-            document.getElementById('deck-relics').innerHTML = mazzoReliquie.length > 0 
-                ? renderCardBackHTML('Reliquie', mazzoReliquie.length) 
-                : '';
+            let deckRelicsHTML = '';
+            mazzoReliquie.forEach((rel, index) => {
+                deckRelicsHTML += renderCardHTML(rel, '', false, '', '', '', '', `z-index: ${index + 1};`);
+            });
+            document.getElementById('deck-relics').innerHTML = deckRelicsHTML;
 
             let goldHTML = '';
             carteOro.forEach((card, index) => {
@@ -1194,7 +1198,7 @@
             document.getElementById('slot-aids').innerHTML = aidHTML;
 
             let heroActHTML = '';
-            carteAzioneEroe.forEach((card, index) => {
+            carteAzioneEroe.forEach((card) => {
                 let isSel = carteSelezionateEroe.includes(card.id);
                 let extraTag = '';
 
@@ -1209,7 +1213,7 @@
                     }
                 }
 
-                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`, `z-index: ${index + 1};`);
+                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`);
             });
             document.getElementById('slot-hero-actions').innerHTML = heroActHTML;
 
@@ -1219,16 +1223,15 @@
                     let isTopTargetCard = (index === carteAzioneNemico.length - 1);
                     let isClickableClass = (isTopTargetCard && (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0)) ? 'clickable-enemy-card' : '';
                     let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
-                    let zIndexStyle = `z-index: ${index + 1};`;
 
                     if (card.revealed) {
                         let enemyExtraTag = '';
                         if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
                             enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
                         }
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId, zIndexStyle);
+                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId);
                     } else {
-                        enemyActHTML += renderCardBackHTML('Nemico', '', true, '', zIndexStyle);
+                        enemyActHTML += renderCardBackHTML('Nemico', '', true);
                     }
                 });
             }
