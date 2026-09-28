@@ -237,10 +237,9 @@
             align-items: center;
             justify-content: flex-start;
             padding: 11px 2px 2px 2px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
             position: relative;
             gap: 4px;
+            overflow: hidden;
         }
 
         .card-container.shift-right {
@@ -268,20 +267,27 @@
             transform: translateY(-6px);
         }
 
-        /* STACKING DUSLLO SCONTRO */
+        /* STACKING DUELLO SCONTRO (SENZA SPOSTAMENTI ORIZZONTALI) */
         .clash-stack-wrapper {
             position: relative;
             width: 52px;
             height: 100%;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             flex-shrink: 0;
         }
 
+        .clash-enemy-base {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 10 !important;
+        }
+
         .clash-hero-overlay {
             position: absolute !important;
-            top: 18px !important;
+            top: 26px !important; /* Abbassata per lasciare ben visibile seme e valore della carta nemico */
             left: 0 !important;
             z-index: 20 !important;
             box-shadow: 0 -4px 8px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.9) !important;
@@ -321,14 +327,6 @@
             background: #801818;
             color: #ffffff;
             border: 1px solid #ff8888;
-        }
-
-        .card-container::-webkit-scrollbar {
-            height: 3px;
-        }
-        .card-container::-webkit-scrollbar-thumb {
-            background: var(--accent-color);
-            border-radius: 2px;
         }
 
         /* CARTE E DORSO CARTE */
@@ -1250,14 +1248,14 @@
 
             let enemyActHTML = '';
             if (inCombattimento) {
-                // Scontro Giocato Precedentemente (Mostra le due carte sovrapposte leggermente sfasate)
+                // Scontro Giocato Precedentemente (Mostra le carte sovrapposte verticalmente mantenendo la posizione)
                 if (scontroPrecedente && scontroPrecedente.enemyCard) {
                     let prevEnemyCard = scontroPrecedente.enemyCard;
                     let prevEnemyTag = '';
                     if (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) {
                         prevEnemyTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
                     }
-                    let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, '', 'played-enemy-action-card');
+                    let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', 'played-enemy-action-card');
 
                     let heroOverlayHTML = '';
                     if (scontroPrecedente.heroCards && scontroPrecedente.heroCards.length > 0) {
