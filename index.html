@@ -225,14 +225,13 @@
             text-transform: uppercase;
             font-weight: bold;
             pointer-events: none;
-            z-index: 2;
+            z-index: 10;
             text-shadow: 0 1px 3px #000;
             letter-spacing: 0.5px;
         }
 
         .card-container {
             display: flex;
-            gap: 4px;
             width: 100%;
             height: 100%;
             align-items: center;
@@ -240,10 +239,32 @@
             padding: 11px 2px 2px 2px;
             overflow-x: auto;
             scroll-behavior: smooth;
+            position: relative;
         }
 
         .card-container.shift-right {
             justify-content: flex-end;
+        }
+
+        /* SOVRAPPOSIZIONE A CASCATA (STACKING) PER LE CARTE */
+        .card-container.stacked-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-right: 15px; /* Spazio finale per permettere lo scorrimento completo dell'ultima carta */
+        }
+
+        .card-container.stacked-container .card {
+            margin-right: -32px; /* Sovrapposizione che lascia visibile l'angolo sinistro (seme + numero) */
+            position: relative;
+            flex-shrink: 0;
+            transition: transform 0.15s ease, margin-right 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        /* Hover o selezione per mettere in risalto la carta nella pila */
+        .card-container.stacked-container .card.selected {
+            z-index: 50 !important;
+            transform: translateY(-6px);
         }
 
         .hp-dice-group {
@@ -254,6 +275,7 @@
             gap: 3px;
             margin-right: auto;
             padding-left: 2px;
+            z-index: 5;
         }
 
         .hp-dice {
@@ -762,21 +784,21 @@
         <div class="slot" id="slot-dungeon" onclick="handleDungeonDeckClick()"><span class="slot-title">Dungeon</span><div id="deck-dungeon" class="card-container"></div></div>
         <div class="slot" onclick="handleEventPileClick()"><span class="slot-title">Evento</span><div id="card-event" class="card-container"></div></div>
         <div class="slot" onclick="handleEnemyDeckClick()"><span class="slot-title">Nemici</span><div id="deck-characters" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">Catacomba</span><div id="slot-catacomb" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Catacomba</span><div id="slot-catacomb" class="card-container stacked-container"></div></div>
 
         <!-- RIGA 2 -->
         <div class="slot empty"></div>
         <div class="slot"><span class="slot-title">Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container"></div></div>
+        <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container stacked-container"></div></div>
 
         <!-- RIGA 3 -->
-        <div class="slot"><span class="slot-title">Reliquie</span><div id="slot-relics" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Reliquie</span><div id="slot-relics" class="card-container stacked-container"></div></div>
         <div class="slot"><span class="slot-title">Eroe</span><div id="slot-hero" class="card-container shift-right"></div></div>
-        <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container"></div></div>
+        <div class="slot span-2"><span class="slot-title">Carte Azione Eroe</span><div id="slot-hero-actions" class="card-container stacked-container"></div></div>
 
         <!-- RIGA 4 -->
-        <div class="slot"><span class="slot-title">Oro</span><div id="slot-gold" class="card-container"></div></div>
-        <div class="slot"><span class="slot-title">Aiuti</span><div id="slot-aids" class="card-container"></div></div>
+        <div class="slot"><span class="slot-title">Oro</span><div id="slot-gold" class="card-container stacked-container"></div></div>
+        <div class="slot"><span class="slot-title">Aiuti</span><div id="slot-aids" class="card-container stacked-container"></div></div>
         
         <div class="slot slot-dice">
             <div id="dice-container" class="dice-slot disabled" onclick="rollDiceTest()">
@@ -869,13 +891,14 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '') {
+        function renderCardBackHTML(unusedTitle, countText, isEnemy = false, extraClasses = '', inlineStyle = '') {
             let backClass = isEnemy ? 'enemy-back' : 'back';
             let subText = countText !== undefined && countText !== null && countText !== '' 
                 ? `<div class="card-back-count">(${countText})</div>` 
                 : '';
+            let styleAttr = inlineStyle ? `style="${inlineStyle}"` : '';
             return `
-                <div class="card ${backClass} ${extraClasses}">
+                <div class="card ${backClass} ${extraClasses}" ${styleAttr}>
                     <div class="card-back-pattern">
                         <div class="card-back-title">Ruba<br>Dungeon</div>
                         ${subText}
@@ -1022,7 +1045,7 @@
             flyer.style.transition = `all ${duration / 1000}s cubic-bezier(0.25, 0.8, 0.25, 1)`;
 
             let frontHTML = cardData ? renderCardHTML(cardData) : '<div class="card"></div>';
-            let backHTML = renderCardBackHTML('', '', cardData && cardData.isEnemy, 'style="width:100%; height:100%;"');
+            let backHTML = renderCardBackHTML('', '', cardData && cardData.isEnemy, '', 'width:100%; height:100%;');
 
             if (isFlipping) {
                 flyer.innerHTML = `
@@ -1108,7 +1131,9 @@
             
             let catacombHTML = '';
             if (catacomba.length > 0) {
-                catacomba.forEach(c => { catacombHTML += renderCardHTML(c); });
+                catacomba.forEach((c, index) => { 
+                    catacombHTML += renderCardHTML(c, '', false, '', '', '', '', `z-index: ${index + 1};`); 
+                });
             }
             document.getElementById('slot-catacomb').innerHTML = catacombHTML;
 
@@ -1135,7 +1160,9 @@
             document.getElementById('slot-enemy').innerHTML = enemy ? enemyDiceHTML + renderCardHTML(enemy, '', false, '', '', '', 'slot-enemy-card') : '';
 
             let relicsHTML = '';
-            reliquieOttenute.forEach(rel => { relicsHTML += renderCardHTML(rel); });
+            reliquieOttenute.forEach((rel, index) => { 
+                relicsHTML += renderCardHTML(rel, '', false, '', '', '', '', `z-index: ${index + 1};`); 
+            });
             document.getElementById('slot-relics').innerHTML = relicsHTML;
 
             let currentHeroHp = Math.max(0, hero.hp);
@@ -1153,21 +1180,21 @@
                 : '';
 
             let goldHTML = '';
-            carteOro.forEach(card => {
+            carteOro.forEach((card, index) => {
                 let isSel = carteOroSelezionate.includes(card.id);
-                goldHTML += renderCardHTML(card, '', isSel, `toggleSelectGold('${card.id}')`, '', '', `gold-card-${card.id}`);
+                goldHTML += renderCardHTML(card, '', isSel, `toggleSelectGold('${card.id}')`, '', '', `gold-card-${card.id}`, `z-index: ${index + 1};`);
             });
             document.getElementById('slot-gold').innerHTML = goldHTML;
 
             let aidHTML = '';
-            carteAiuto.forEach(card => {
+            carteAiuto.forEach((card, index) => {
                 let isSel = carteAiutoSelezionate.includes(card.id);
-                aidHTML += renderCardHTML(card, '', isSel, `toggleSelectAid('${card.id}')`);
+                aidHTML += renderCardHTML(card, '', isSel, `toggleSelectAid('${card.id}')`, '', '', '', `z-index: ${index + 1};`);
             });
             document.getElementById('slot-aids').innerHTML = aidHTML;
 
             let heroActHTML = '';
-            carteAzioneEroe.forEach((card) => {
+            carteAzioneEroe.forEach((card, index) => {
                 let isSel = carteSelezionateEroe.includes(card.id);
                 let extraTag = '';
 
@@ -1182,7 +1209,7 @@
                     }
                 }
 
-                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`);
+                heroActHTML += renderCardHTML(card, '', isSel, `selectHeroAction('${card.id}')`, extraTag, '', `hero-act-${card.id}`, `z-index: ${index + 1};`);
             });
             document.getElementById('slot-hero-actions').innerHTML = heroActHTML;
 
@@ -1192,15 +1219,16 @@
                     let isTopTargetCard = (index === carteAzioneNemico.length - 1);
                     let isClickableClass = (isTopTargetCard && (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0)) ? 'clickable-enemy-card' : '';
                     let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
+                    let zIndexStyle = `z-index: ${index + 1};`;
 
                     if (card.revealed) {
                         let enemyExtraTag = '';
                         if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
                             enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
                         }
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId);
+                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId, zIndexStyle);
                     } else {
-                        enemyActHTML += renderCardBackHTML('Nemico', '', true);
+                        enemyActHTML += renderCardBackHTML('Nemico', '', true, '', zIndexStyle);
                     }
                 });
             }
@@ -1293,15 +1321,16 @@
             return symbol;
         }
 
-        function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
+        function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '', inlineStyle = '') {
             if (!card) return '';
             let idAttr = elementId ? `id="${elementId}"` : '';
             let symbol = SUIT_SYMBOLS[card.suit] || '';
             let suitClass = SUIT_CLASSES[card.suit] || '';
             let graphicContent = getCardGraphicContent(card, symbol, suitClass);
+            let styleAttr = inlineStyle ? `style="${inlineStyle}"` : '';
 
             return `
-                <div ${idAttr} class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}">
+                <div ${idAttr} class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}" ${styleAttr}>
                     <div class="card-corner top-left ${suitClass}">
                         <span class="card-val">${card.value}</span>
                         <span class="card-suit-symbol">${symbol}</span>
