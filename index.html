@@ -267,7 +267,7 @@
             transform: translateY(-6px);
         }
 
-        /* STACKING DUELLO SCONTRO (SENZA SPOSTAMENTI ORIZZONTALI) */
+        /* STACKING DUELLO SCONTRO FISSO PER COLONNE */
         .clash-stack-wrapper {
             position: relative;
             width: 52px;
@@ -287,7 +287,7 @@
 
         .clash-hero-overlay {
             position: absolute !important;
-            top: 26px !important; /* Abbassata per lasciare ben visibile seme e valore della carta nemico */
+            top: 26px !important;
             left: 0 !important;
             z-index: 20 !important;
             box-shadow: 0 -4px 8px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.9) !important;
@@ -892,8 +892,8 @@
         let carteAzioneNemico = [];
         let carteSelezionateEroe = [];
 
-        // Gestione duello precedente (Sovrapposizione nello scontro)
-        let scontroPrecedente = null; 
+        // Gestione storico scontri giocate nel combattimento corrente
+        let scontriGiocati = []; 
 
         let inCombattimento = false;
         let fasePostCombattimento = false;
@@ -973,13 +973,15 @@
             diceBox.classList.remove('success', 'fail', 'rolling');
         }
 
-        function clearPreviousClashToEvents() {
-            if (scontroPrecedente) {
-                if (scontroPrecedente.enemyCard) carteEventoPila.push(scontroPrecedente.enemyCard);
-                if (scontroPrecedente.heroCards && scontroPrecedente.heroCards.length > 0) {
-                    carteEventoPila.push(...scontroPrecedente.heroCards);
-                }
-                scontroPrecedente = null;
+        function clearAllClashesToEvents() {
+            if (scontriGiocati && scontriGiocati.length > 0) {
+                scontriGiocati.forEach(sconto => {
+                    if (sconto.enemyCard) carteEventoPila.push(sconto.enemyCard);
+                    if (sconto.heroCards && sconto.heroCards.length > 0) {
+                        carteEventoPila.push(...sconto.heroCards);
+                    }
+                });
+                scontriGiocati = [];
             }
         }
 
@@ -1018,7 +1020,7 @@
             carteAzioneEroe = [];
             carteAzioneNemico = [];
             carteSelezionateEroe = [];
-            scontroPrecedente = null;
+            scontriGiocati = [];
             enemy = null;
             cartaEventoCorrente = null;
             inCombattimento = false;
@@ -1248,45 +1250,63 @@
 
             let enemyActHTML = '';
             if (inCombattimento) {
-                // Scontro Giocato Precedentemente (Mostra le carte sovrapposte verticalmente mantenendo la posizione)
-                if (scontroPrecedente && scontroPrecedente.enemyCard) {
-                    let prevEnemyCard = scontroPrecedente.enemyCard;
-                    let prevEnemyTag = '';
-                    if (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) {
-                        prevEnemyTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
-                    }
-                    let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', 'played-enemy-action-card');
-
-                    let heroOverlayHTML = '';
-                    if (scontroPrecedente.heroCards && scontroPrecedente.heroCards.length > 0) {
-                        let primaryHeroCard = scontroPrecedente.heroCards[0];
-                        heroOverlayHTML = renderCardHTML(primaryHeroCard, '', false, '', '', 'clash-hero-overlay', 'played-hero-action-card');
-                    }
-
-                    enemyActHTML += `
-                        <div class="clash-stack-wrapper">
-                            ${enemyBaseHTML}
-                            ${heroOverlayHTML}
-                        </div>
-                    `;
-                }
-
-                // Carte del nemico ancora da giocare
-                carteAzioneNemico.forEach((card, index) => {
-                    let isTopTargetCard = (index === carteAzioneNemico.length - 1);
-                    let isClickableClass = (isTopTargetCard && (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0)) ? 'clickable-enemy-card' : '';
-                    let cardElementId = isTopTargetCard ? 'top-enemy-action-card' : '';
-
-                    if (card.revealed) {
-                        let enemyExtraTag = '';
-                        if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
-                            enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
+                // Costruzione 3 slot colonne per le carte azione nemico/eroe
+                for (let col = 0; col < 3; col++) {
+                    let clashPlayed = scontriGiocati[col];
+                    
+                    if (clashPlayed) {
+                        // Carta Nemico già giocata in questo slot
+                        let prevEnemyCard = clashPlayed.enemyCard;
+                        let prevEnemyTag = '';
+                        if (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) {
+                            prevEnemyTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
                         }
-                        enemyActHTML += renderCardHTML(card, '', false, isTopTargetCard ? 'handleEnemyCardClick()' : '', enemyExtraTag, isClickableClass, cardElementId);
-                    } else {
-                        enemyActHTML += renderCardBackHTML('Nemico', '', true);
+                        let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', `played-enemy-card-${col}`);
+
+                        // Carta Eroe giocate in questo slot sovrapposta
+                        let heroOverlayHTML = '';
+                        if (clashPlayed.heroCards && clashPlayed.heroCards.length > 0) {
+                            let primaryHeroCard = clashPlayed.heroCards[0];
+                            heroOverlayHTML = renderCardHTML(primaryHeroCard, '', false, '', '', 'clash-hero-overlay', `played-hero-card-${col}`);
+                        }
+
+                        enemyActHTML += `
+                            <div class="clash-stack-wrapper" id="enemy-slot-col-${col}">
+                                ${enemyBaseHTML}
+                                ${heroOverlayHTML}
+                            </div>
+                        `;
+                    } else if (carteAzioneNemico.length > 0) {
+                        // Slot con carta del nemico non ancora risolta
+                        // La prima carta azione non risolta si trova nell'indice (3 - scontriGiocati.length - 1)
+                        let activeIndexInRemaining = carteAzioneNemico.length - 1;
+                        let isCurrentTarget = (col === scontriGiocati.length);
+
+                        if (isCurrentTarget) {
+                            let card = carteAzioneNemico[activeIndexInRemaining];
+                            let isClickableClass = (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0) ? 'clickable-enemy-card' : '';
+                            
+                            let enemyExtraTag = '';
+                            if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
+                                enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
+                            }
+
+                            let cardHTML = renderCardHTML(card, '', false, 'handleEnemyCardClick()', enemyExtraTag, isClickableClass, 'top-enemy-action-card');
+                            enemyActHTML += `
+                                <div class="clash-stack-wrapper" id="enemy-slot-col-${col}">
+                                    ${cardHTML}
+                                </div>
+                            `;
+                        } else {
+                            // Slot per le carte successive del nemico ancora coperte
+                            enemyActHTML += `
+                                <div class="clash-stack-wrapper" id="enemy-slot-col-${col}">
+                                    ${renderCardBackHTML('Nemico', '', true)}
+                                </div>
+                            `;
+                        }
                     }
-                });
+                }
             }
             document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
         }
@@ -1517,7 +1537,7 @@
                     log('Hai carte azione selezionate! Tocca la casella "Evento" per scartarle, oppure deselezionale prima di proseguire.');
                     return;
                 }
-                clearPreviousClashToEvents();
+                clearAllClashesToEvents();
                 fasePostCombattimento = false;
                 canDrawEvent = true;
                 log('Prosegui la spedizione!');
@@ -1652,6 +1672,7 @@
                     inCombattimento = true;
                     canDrawEvent = false;
                     inAttesaCorruzione = false;
+                    scontriGiocati = [];
                     setDiceEnabled(false);
 
                     let endElem = document.getElementById('slot-enemy');
@@ -1732,6 +1753,7 @@
 
             inCombattimento = true;
             canDrawEvent = false;
+            scontriGiocati = [];
             enemy = mazzoPersonaggi.pop();
             enemy.isEnemy = true;
             
@@ -1756,11 +1778,11 @@
             });
         }
 
-        function revealTopEnemyAction() {
+        function revealCurrentEnemyAction() {
             if (carteAzioneNemico.length > 0) {
-                let topCard = carteAzioneNemico[carteAzioneNemico.length - 1];
-                if (!topCard.revealed) {
-                    topCard.revealed = true;
+                let currentEnemyCard = carteAzioneNemico[carteAzioneNemico.length - 1];
+                if (!currentEnemyCard.revealed) {
+                    currentEnemyCard.revealed = true;
                 }
             }
         }
@@ -1779,7 +1801,7 @@
                 carteAzioneNemico.push(c);
             }
 
-            revealTopEnemyAction();
+            revealCurrentEnemyAction();
 
             carteSelezionateEroe = [];
             log('Seleziona la tua Carta Azione Eroe, poi tocca la Carta Nemico svelata per giocare!');
@@ -1834,16 +1856,14 @@
         function playSelectedHeroCards() {
             if (carteAzioneNemico.length === 0) return;
 
-            // Prima di risolvere questo scontro, scarta negli eventi le carte dello scontro precedente
-            clearPreviousClashToEvents();
-
+            let currentColIndex = scontriGiocati.length;
             let heroCardsPlayed = carteAzioneEroe.filter(c => carteSelezionateEroe.includes(c.id));
             let primaryHeroCard = heroCardsPlayed.length > 0 ? heroCardsPlayed[0] : null;
 
             let startElem = primaryHeroCard 
                 ? (document.getElementById(`hero-act-${primaryHeroCard.id}`) || document.getElementById('slot-hero-actions'))
                 : document.getElementById('slot-hero');
-            let endElem = document.getElementById('top-enemy-action-card') || document.getElementById('slot-enemy-actions');
+            let endElem = document.getElementById(`enemy-slot-col-${currentColIndex}`) || document.getElementById('top-enemy-action-card');
 
             animateCardMovement({
                 startElem: startElem,
@@ -1886,15 +1906,15 @@
                     carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
                     carteSelezionateEroe = [];
 
-                    // Salva questo scontro per mantenerlo visibile a schermo finché non si gioca la carta successiva
-                    scontroPrecedente = {
+                    // Salva lo scontro nello storico per mantenerlo bloccato nel suo slot colonna specifico
+                    scontriGiocati.push({
                         enemyCard: enemyCardPlayed,
                         heroCards: heroCardsPlayed
-                    };
+                    });
 
                     if (checkGameOver()) return;
 
-                    revealTopEnemyAction();
+                    revealCurrentEnemyAction();
                     checkCombatStatus();
                 }
             });
@@ -1993,7 +2013,7 @@
                     carteAzioneNemico = [];
                 }
 
-                clearPreviousClashToEvents();
+                clearAllClashesToEvents();
 
                 if (checkWinCondition()) return;
 
@@ -2005,7 +2025,8 @@
             }
 
             if (carteAzioneNemico.length === 0) {
-                log('Round finito! Preparazione nuove carte azione...');
+                log('Round finito! Carte dello scontro scartate negli Eventi. Preparazione nuove carte azione...');
+                clearAllClashesToEvents();
                 setupCombatTurn();
             } else {
                 updateUI();
@@ -2075,7 +2096,7 @@
                     }
                     cartaEventoCorrente = null;
                 }
-                clearPreviousClashToEvents();
+                clearAllClashesToEvents();
                 canDrawEvent = true;
                 setDiceEnabled(false);
             }
