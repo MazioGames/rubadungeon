@@ -225,7 +225,7 @@
             text-transform: uppercase;
             font-weight: bold;
             pointer-events: none;
-            z-index: 10;
+            z-index: 100;
             text-shadow: 0 1px 3px #000;
             letter-spacing: 0.5px;
         }
@@ -246,13 +246,30 @@
             justify-content: flex-end;
         }
 
-        /* SOVRAPPOSIZIONE A CASCATA (STACKING) PER LE CARTE */
+        /* SOVRAPPOSIZIONE A CASCATA SCORREVOLE (STACKING SCROLLABLE) */
         .card-container.stacked-container {
             gap: 0;
             display: flex;
             align-items: center;
             justify-content: flex-start;
             padding-right: 15px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* SCROLLBAR CUSTOM PER LE CASSELE SCORREVOLI */
+        .card-container.stacked-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .card-container.stacked-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+        .card-container.stacked-container::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 2px;
         }
 
         .card-container.stacked-container .card {
@@ -263,7 +280,7 @@
         }
 
         .card-container.stacked-container .card.selected {
-            z-index: 50 !important;
+            z-index: 90 !important;
             transform: translateY(-6px);
         }
 
@@ -993,6 +1010,13 @@
             }
         }
 
+        function autoScrollContainer(containerId) {
+            setTimeout(() => {
+                let el = document.getElementById(containerId);
+                if (el) el.scrollLeft = el.scrollWidth;
+            }, 50);
+        }
+
         function initGame() {
             document.getElementById('defeat-overlay').style.display = 'none';
             document.getElementById('victory-overlay').style.display = 'none';
@@ -1441,6 +1465,7 @@
                     cartaEventoCorrente = null;
                     canDrawEvent = true;
                     updateUI();
+                    autoScrollContainer('slot-gold');
                 }
             });
         }
@@ -1681,6 +1706,7 @@
                             nemiciSconfittiTotali++;
                             inAttesaCorruzione = false;
                             endTurn(true);
+                            autoScrollContainer('slot-aids');
                         }
                     });
                 } else {
@@ -1922,6 +1948,7 @@
                         carteAiuto = carteAiuto.filter(a => !matchingAids.map(m => m.id).includes(a.id));
                         catacomba.push(...matchingAids);
                         log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})!`);
+                        autoScrollContainer('slot-catacomb');
                     }
                     carteAiutoSelezionate = [];
 
@@ -2042,12 +2069,15 @@
                         let rel = mazzoReliquie.splice(relIndex, 1)[0];
                         reliquieOttenute.push(rel);
                         log(`★ OTTENUTA LA RELIQUIA DI ${enemy.suit}! ★`);
+                        autoScrollContainer('slot-relics');
                     }
                     carteAiuto.push(enemy);
                     log(`Il Re sconfitto diviene una Carta Aiuto!`);
+                    autoScrollContainer('slot-aids');
                 } else {
                     carteAiuto.push(enemy);
                     log(`Il nemico arruolato come Carta Aiuto.`);
+                    autoScrollContainer('slot-aids');
                 }
 
                 if (cartaEventoCorrente) {
@@ -2141,6 +2171,7 @@
                 if (keepEventInPile && cartaEventoCorrente) {
                     if (cartaEventoCorrente.suit === SUITS.DENARI) {
                         carteOro.push(cartaEventoCorrente);
+                        autoScrollContainer('slot-gold');
                     } else {
                         carteEventoPila.push(cartaEventoCorrente);
                     }
