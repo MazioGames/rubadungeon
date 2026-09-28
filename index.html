@@ -308,6 +308,7 @@
             transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             flex-shrink: 0;
             position: relative;
+            overflow: hidden;
         }
 
         .card.selected {
@@ -352,12 +353,24 @@
             font-size: 1.3rem;
             opacity: 0.22;
             pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
-        .suit-bastoni { color: #5d4037; }
-        .suit-coppe { color: #c62828; }
-        .suit-denari { color: #f57f17; }
-        .suit-spade { color: #1565c0; }
+        .card-figure-svg {
+            width: 78%;
+            height: 78%;
+            opacity: 0.85;
+            pointer-events: none;
+        }
+
+        .suit-bastoni { color: #5d4037; fill: #5d4037; }
+        .suit-coppe { color: #c62828; fill: #c62828; }
+        .suit-denari { color: #f57f17; fill: #f57f17; }
+        .suit-spade { color: #1565c0; fill: #1565c0; }
 
         .card.back {
             background: 
@@ -1194,11 +1207,98 @@
             document.getElementById('slot-enemy-actions').innerHTML = enemyActHTML;
         }
 
+        function getCardGraphicContent(card, symbol, suitClass) {
+            // Asso / Reliquia (Valore 1)
+            if (card.value === 1) {
+                return `
+                    <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="10" y="10" width="80" height="120" rx="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="6,3"/>
+                        <circle cx="50" cy="70" r="28" fill="none" stroke="currentColor" stroke-width="3"/>
+                        <polygon points="50,22 62,50 90,50 67,68 76,96 50,78 24,96 33,68 10,50 38,50" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                        <text x="50" y="79" font-size="28" text-anchor="middle" fill="currentColor">${symbol}</text>
+                    </svg>
+                `;
+            }
+            // Fante (Valore 8)
+            if (card.value === 8) {
+                return `
+                    <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Cappello -->
+                        <path d="M 30,42 C 30,25 70,25 70,42 Z" fill="currentColor"/>
+                        <!-- Capelli -->
+                        <circle cx="30" cy="48" r="6" fill="currentColor"/>
+                        <circle cx="70" cy="48" r="6" fill="currentColor"/>
+                        <!-- Testa -->
+                        <circle cx="50" cy="46" r="13" fill="#fdf6e3" stroke="currentColor" stroke-width="2"/>
+                        <!-- Occhi & Baffi/Bocca -->
+                        <circle cx="45" cy="44" r="1.5" fill="currentColor"/>
+                        <circle cx="55" cy="44" r="1.5" fill="currentColor"/>
+                        <path d="M 46,52 Q 50,55 54,52" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                        <!-- Busto / Giubba -->
+                        <path d="M 28,60 L 72,60 L 80,115 L 20,115 Z" fill="currentColor" opacity="0.85"/>
+                        <line x1="50" y1="60" x2="50" y2="115" stroke="#fdf6e3" stroke-width="2"/>
+                        <!-- Gambe / Calze -->
+                        <rect x="34" y="115" width="10" height="20" fill="currentColor"/>
+                        <rect x="56" y="115" width="10" height="20" fill="currentColor"/>
+                        <!-- Simbolo in mano -->
+                        <circle cx="50" cy="85" r="11" fill="#fdf6e3" stroke="currentColor" stroke-width="2"/>
+                        <text x="50" y="90" font-size="13" text-anchor="middle" fill="currentColor">${symbol}</text>
+                    </svg>
+                `;
+            }
+            // Cavaliere (Valore 9)
+            if (card.value === 9) {
+                return `
+                    <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Cavallo -->
+                        <path d="M 20,110 C 15,80 35,55 55,55 C 65,55 75,45 70,30 C 85,35 90,55 80,70 C 75,78 70,85 75,110 Z" fill="currentColor" opacity="0.85"/>
+                        <circle cx="72" cy="42" r="2.5" fill="#fdf6e3"/>
+                        <!-- Busto Cavaliere -->
+                        <path d="M 32,45 L 52,45 L 58,80 L 26,80 Z" fill="currentColor"/>
+                        <!-- Elmo/Testa -->
+                        <circle cx="42" cy="35" r="10" fill="#fdf6e3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M 34,30 L 50,30 L 42,20 Z" fill="currentColor"/>
+                        <!-- Scudo / Simbolo -->
+                        <path d="M 25,60 Q 40,60 40,80 Q 40,95 25,100 Q 10,95 10,80 Q 10,60 25,60 Z" fill="#fdf6e3" stroke="currentColor" stroke-width="2"/>
+                        <text x="25" y="85" font-size="14" text-anchor="middle" fill="currentColor">${symbol}</text>
+                    </svg>
+                `;
+            }
+            // Re (Valore 10)
+            if (card.value === 10) {
+                return `
+                    <svg class="card-figure-svg ${suitClass}" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Corona -->
+                        <path d="M 30,28 L 35,16 L 50,24 L 65,16 L 70,28 Z" fill="currentColor"/>
+                        <circle cx="35" cy="15" r="2" fill="currentColor"/>
+                        <circle cx="50" cy="22" r="2" fill="currentColor"/>
+                        <circle cx="65" cy="15" r="2" fill="currentColor"/>
+                        <!-- Testa e Barba -->
+                        <circle cx="50" cy="38" r="12" fill="#fdf6e3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M 38,42 C 38,58 62,58 62,42 Z" fill="currentColor"/> <!-- Barba -->
+                        <circle cx="45" cy="36" r="1.5" fill="currentColor"/>
+                        <circle cx="55" cy="36" r="1.5" fill="currentColor"/>
+                        <!-- Mantello e Manto -->
+                        <path d="M 18,50 L 82,50 L 88,125 L 12,125 Z" fill="currentColor" opacity="0.8"/>
+                        <path d="M 32,50 L 68,50 L 72,125 L 28,125 Z" fill="#fdf6e3" stroke="currentColor" stroke-width="1.5"/>
+                        <!-- Scettro / Simbolo Grande -->
+                        <circle cx="50" cy="80" r="16" fill="currentColor"/>
+                        <circle cx="50" cy="80" r="13" fill="#fdf6e3"/>
+                        <text x="50" y="87" font-size="18" text-anchor="middle" fill="currentColor">${symbol}</text>
+                    </svg>
+                `;
+            }
+            
+            // Per le altre carte (2-7), mostra l'icona normale centrata
+            return symbol;
+        }
+
         function renderCardHTML(card, badge = '', isSelected = false, clickFn = '', extraHTML = '', extraClass = '', elementId = '') {
             if (!card) return '';
             let idAttr = elementId ? `id="${elementId}"` : '';
             let symbol = SUIT_SYMBOLS[card.suit] || '';
             let suitClass = SUIT_CLASSES[card.suit] || '';
+            let graphicContent = getCardGraphicContent(card, symbol, suitClass);
 
             return `
                 <div ${idAttr} class="card ${isSelected ? 'selected' : ''} ${extraClass}" onclick="${clickFn}">
@@ -1207,7 +1307,7 @@
                         <span class="card-suit-symbol">${symbol}</span>
                     </div>
 
-                    <div class="card-center-icon ${suitClass}">${symbol}</div>
+                    <div class="card-center-icon ${suitClass}">${graphicContent}</div>
 
                     <div class="card-corner bottom-right ${suitClass}">
                         <span class="card-val">${card.value}</span>
