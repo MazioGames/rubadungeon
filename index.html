@@ -829,7 +829,7 @@
         <div class="slot"><span class="slot-title">Catacomba</span><div id="slot-catacomb" class="card-container stacked-container"></div></div>
 
         <!-- RIGA 2 -->
-        <div class="slot empty"></div>
+        <div class="slot"><span class="slot-title">Aiuti Nemico</span><div id="slot-enemy-aids" class="card-container stacked-container"></div></div>
         <div class="slot"><span class="slot-title">Nemico</span><div id="slot-enemy" class="card-container shift-right"></div></div>
         <div class="slot span-2"><span class="slot-title">Carte Azione Nemico</span><div id="slot-enemy-actions" class="card-container enemy-actions-container"></div></div>
 
@@ -912,6 +912,7 @@
         
         let carteAiuto = [];
         let carteAiutoSelezionate = [];
+        let carteAiutoNemico = [];
 
         let carteAzioneEroe = [];
         let carteAzioneNemico = [];
@@ -1049,6 +1050,7 @@
             reliquieOttenute = [];
             carteAiuto = [];
             carteAiutoSelezionate = [];
+            carteAiutoNemico = [];
             carteAzioneEroe = [];
             carteAzioneNemico = [];
             carteSelezionateEroe = [];
@@ -1202,6 +1204,14 @@
             }
             document.getElementById('slot-catacomb').innerHTML = catacombHTML;
 
+            let enemyAidsHTML = '';
+            if (carteAiutoNemico.length > 0) {
+                carteAiutoNemico.forEach((c, index) => {
+                    enemyAidsHTML += renderCardHTML(c, '', false, '', '', '', `enemy-aid-${c.id}`, `z-index: ${index + 1};`);
+                });
+            }
+            document.getElementById('slot-enemy-aids').innerHTML = enemyAidsHTML;
+
             let enemyDiceHTML = '';
             if (enemy) {
                 let currentEnemyHp = Math.max(0, enemyHp);
@@ -1256,7 +1266,7 @@
             let aidHTML = '';
             carteAiuto.forEach((card, index) => {
                 let isSel = carteAiutoSelezionate.includes(card.id);
-                aidHTML += renderCardHTML(card, '', isSel, `toggleSelectAid('${card.id}')`, '', '', '', `z-index: ${index + 1};`);
+                aidHTML += renderCardHTML(card, '', isSel, `toggleSelectAid('${card.id}')`, '', '', `hero-aid-${card.id}`, `z-index: ${index + 1};`);
             });
             document.getElementById('slot-aids').innerHTML = aidHTML;
 
@@ -1297,8 +1307,12 @@
                         // Carta Nemico già giocata in questo slot
                         let prevEnemyCard = clashPlayed.enemyCard;
                         let prevEnemyTag = '';
-                        if (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) {
-                            prevEnemyTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
+                        let baseKingBonus = (mode === 'Difficile' && enemy && enemy.value === 10 && prevEnemyCard.suit === enemy.suit) ? 1 : 0;
+                        let enemyAidBonus = clashPlayed.enemyAidBonus || 0;
+                        let totalPrevEnemyBonus = baseKingBonus + enemyAidBonus;
+
+                        if (totalPrevEnemyBonus > 0) {
+                            prevEnemyTag = `<div class="bonus-tag enemy-bonus-tag">+${totalPrevEnemyBonus}</div>`;
                         }
                         let enemyBaseHTML = renderCardHTML(prevEnemyCard, '', false, '', prevEnemyTag, 'clash-enemy-base', `played-enemy-card-${col}`);
 
@@ -1325,8 +1339,12 @@
                             let isClickableClass = (carteSelezionateEroe.length > 0 || carteAzioneEroe.length === 0) ? 'clickable-enemy-card' : '';
                             
                             let enemyExtraTag = '';
-                            if (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) {
-                                enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+1</div>`;
+                            let baseKingBonus = (mode === 'Difficile' && enemy && enemy.value === 10 && card.suit === enemy.suit) ? 1 : 0;
+                            let matchingEnemyAidsCount = (mode === 'Difficile') ? carteAiutoNemico.filter(a => a.suit === card.suit).length : 0;
+                            let totalCurrentEnemyBonus = baseKingBonus + matchingEnemyAidsCount;
+
+                            if (totalCurrentEnemyBonus > 0) {
+                                enemyExtraTag = `<div class="bonus-tag enemy-bonus-tag">+${totalCurrentEnemyBonus}</div>`;
                             }
 
                             let cardHTML = renderCardHTML(card, '', false, 'handleEnemyCardClick()', enemyExtraTag, isClickableClass, 'top-enemy-action-card');
@@ -1946,16 +1964,36 @@
 
                     if (aidBonus > 0) {
                         carteAiuto = carteAiuto.filter(a => !matchingAids.map(m => m.id).includes(a.id));
-                        catacomba.push(...matchingAids);
-                        log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})!`);
-                        autoScrollContainer('slot-catacomb');
+                        if (mode === 'Difficile') {
+                            carteAiutoNemico.push(...matchingAids);
+                            log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})! Diventano Carte Aiuto Nemico!`);
+                            autoScrollContainer('slot-enemy-aids');
+                        } else {
+                            catacomba.push(...matchingAids);
+                            log(`Usate ${aidBonus} Carte Aiuto di ${chosenSuit} (+${aidBonus})! Finiscono in Catacomba.`);
+                            autoScrollContainer('slot-catacomb');
+                        }
                     }
                     carteAiutoSelezionate = [];
 
                     let heroTotalValue = heroBaseValue + relicBonus + aidBonus;
                     
-                    let enemyBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
-                    let enemyTotalValue = enemyCardPlayed.value + enemyBonus;
+                    let enemyBaseKingBonus = (mode === 'Difficile' && enemy.value === 10 && enemyCardPlayed.suit === enemy.suit) ? 1 : 0;
+                    
+                    let enemyAidBonus = 0;
+                    if (mode === 'Difficile' && carteAiutoNemico.length > 0) {
+                        let matchingEnemyAids = carteAiutoNemico.filter(a => a.suit === enemyCardPlayed.suit);
+                        enemyAidBonus = matchingEnemyAids.length;
+                        if (enemyAidBonus > 0) {
+                            carteAiutoNemico = carteAiutoNemico.filter(a => a.suit !== enemyCardPlayed.suit);
+                            catacomba.push(...matchingEnemyAids);
+                            log(`⚠ Aiuto Nemico attivato! Usate ${enemyAidBonus} Carte Aiuto Nemico di ${enemyCardPlayed.suit} (+${enemyAidBonus}) per il Nemico! Finiscono in Catacomba.`);
+                            autoScrollContainer('slot-catacomb');
+                        }
+                    }
+
+                    let enemyBonusTotal = enemyBaseKingBonus + enemyAidBonus;
+                    let enemyTotalValue = enemyCardPlayed.value + enemyBonusTotal;
 
                     if (heroCardsPlayed.length > 0) {
                         if (heroCardsPlayed.length > 1) {
@@ -1966,7 +2004,16 @@
                     } else {
                         log(`L'Eroe non ha carte da giocare ed incassa il colpo del Nemico!`);
                     }
-                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue}${enemyBonus ? ' +1 Potere Re' : ''})`);
+
+                    let enemyBonusLogStr = '';
+                    if (enemyBaseKingBonus && enemyAidBonus) {
+                        enemyBonusLogStr = ' (+1 Potere Re + Aiuto Nemico)';
+                    } else if (enemyBaseKingBonus) {
+                        enemyBonusLogStr = ' (+1 Potere Re)';
+                    } else if (enemyAidBonus) {
+                        enemyBonusLogStr = ` (+${enemyAidBonus} Aiuto Nemico)`;
+                    }
+                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue}${enemyBonusLogStr})`);
 
                     resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
 
@@ -1986,7 +2033,8 @@
 
                     scontriGiocati.push({
                         enemyCard: enemyCardPlayed,
-                        heroCards: visualHeroCards
+                        heroCards: visualHeroCards,
+                        enemyAidBonus: enemyAidBonus
                     });
 
                     if (checkGameOver()) return;
