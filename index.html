@@ -1997,239 +1997,134 @@
 
                     if (heroCardsPlayed.length > 0) {
                         if (heroCardsPlayed.length > 1) {
-                            log(`Combo giocata! L'Eroe usa ${heroCardsPlayed.length} carte con seme dominante ${chosenSuit} (Valore base: ${heroBaseValue}, Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
+                            log(`Combo giocata! L'Eroe usa ${heroCardsPlayed.length} carte con seme dominante ${chosenSuit} (Valore base: ${heroBaseValue}, Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuto` : ''}).`);
                         } else {
-                            log(`Eroe gioca ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuti` : ''})`);
+                            log(`L'Eroe gioca ${heroBaseValue} di ${chosenSuit} (Totale: ${heroTotalValue}${relicBonus ? ` +${relicBonus} Reliquia` : ''}${aidBonus ? ` +${aidBonus} Aiuto` : ''}).`);
                         }
+
+                        carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
+                        carteSelezionateEroe = [];
                     } else {
-                        log(`L'Eroe non ha carte da giocare ed incassa il colpo del Nemico!`);
+                        log(`L'Eroe non gioca carte (Valore: 0).`);
                     }
 
-                    let enemyBonusLogStr = '';
-                    if (enemyBaseKingBonus && enemyAidBonus) {
-                        enemyBonusLogStr = ' (+1 Potere Re + Aiuto Nemico)';
-                    } else if (enemyBaseKingBonus) {
-                        enemyBonusLogStr = ' (+1 Potere Re)';
-                    } else if (enemyAidBonus) {
-                        enemyBonusLogStr = ` (+${enemyAidBonus} Aiuto Nemico)`;
-                    }
-                    log(`Nemico gioca ${enemyCardPlayed.suit} (Totale: ${enemyTotalValue}${enemyBonusLogStr})`);
+                    log(`Il Nemico risponde con ${enemyCardPlayed.value} di ${enemyCardPlayed.suit}${enemyBonusTotal ? ` (Totale: ${enemyTotalValue} con +${enemyBonusTotal} Bonus)` : ''}.`);
 
-                    resolveCombatExchange(chosenSuit, heroTotalValue, enemyCardPlayed.suit, enemyTotalValue);
-
-                    carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
-                    carteSelezionateEroe = [];
-
-                    // Salva lo scontro nello storico per mantenerlo bloccato nel suo slot colonna specifico
-                    // In caso di combo, visualizza la carta sovrapposta col seme della prima carta scelta e il valore combinato
-                    let visualHeroCards = heroCardsPlayed;
-                    if (heroCardsPlayed.length > 1) {
-                        visualHeroCards = [{
-                            ...primaryHeroCard,
-                            value: heroBaseValue,
-                            suit: chosenSuit
-                        }];
+                    let diff = heroTotalValue - enemyTotalValue;
+                    if (diff > 0) {
+                        enemyHp -= diff;
+                        log(`⚔ VITTORIA DUO! Inflitti ${diff} danni al Nemico! (Nemico HP: ${Math.max(0, enemyHp)})`);
+                    } else if (diff < 0) {
+                        let dmg = Math.abs(diff);
+                        hero.hp -= dmg;
+                        log(`💔 SCONTRO PERSO! Subisci ${dmg} danni! (Eroe HP: ${Math.max(0, hero.hp)})`);
+                    } else {
+                        log(`🛡 PAREGGIO! Nessun danno subito o inflitto.`);
                     }
 
                     scontriGiocati.push({
                         enemyCard: enemyCardPlayed,
-                        heroCards: visualHeroCards,
-                        enemyAidBonus: enemyAidBonus
+                        heroCards: heroCardsPlayed,
+                        enemyAidBonus: enemyBonusTotal
                     });
 
                     if (checkGameOver()) return;
 
-                    revealCurrentEnemyAction();
-                    checkCombatStatus();
+                    if (enemyHp <= 0) {
+                        resolveEnemyDefeat();
+                        return;
+                    }
+
+                    if (carteAzioneNemico.length > 0) {
+                        revealCurrentEnemyAction();
+                        updateUI();
+                    } else {
+                        log('--- Fine Round Combattimento ---');
+                        setupCombatTurn();
+                    }
                 }
             });
         }
 
-        function resolveCombatExchange(hSuit, hVal, eSuit, eVal) {
-            if (!hSuit) {
-                if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
-                    hero.hp -= eVal;
-                    log(`Senza difesa! L'attacco del Nemico (${eSuit}) ti infligge ${eVal} danni.`);
-                } else if (eSuit === SUITS.COPPE) {
-                    enemyHp = Math.min(enemyMaxHp, enemyHp + eVal);
-                    log(`Il Nemico gioca Coppe e si cura di ${eVal} HP. (HP Nemico: ${enemyHp}/${enemyMaxHp})`);
-                } else if (eSuit === SUITS.DENARI) {
-                    log(`Il Nemico gioca Denari senza risposta (nessun effetto).`);
+        function resolveEnemyDefeat() {
+            log(`★ NEMICO SCONFITTO! ★ (${enemy.value} di ${enemy.suit})`);
+            nemiciSconfittiTotali++;
+
+            let defeatedEnemy = enemy;
+
+            if (enemy.value === 10) {
+                let matchingRelicIndex = mazzoReliquie.findIndex(r => r.suit === enemy.suit);
+                if (matchingRelicIndex !== -1) {
+                    let relic = mazzoReliquie.splice(matchingRelicIndex, 1)[0];
+                    reliquieOttenute.push(relic);
+                    log(`✨ HAI CONQUISTATO UNA RELIQUIA! (${relic.suit}) ✨`);
+                    autoScrollContainer('slot-relics');
                 }
+                catacomba.push(defeatedEnemy);
+                autoScrollContainer('slot-catacomb');
+            } else if (enemy.value === 8 || enemy.value === 9) {
+                carteAiuto.push(defeatedEnemy);
+                log(`Il nemico sconfitto (${defeatedEnemy.value} di ${defeatedEnemy.suit}) si unisce alle tue Carte Aiuto!`);
+                autoScrollContainer('slot-aids');
+            }
+
+            enemy = null;
+            inCombattimento = false;
+            fasePostCombattimento = true;
+
+            carteAzioneNemico = [];
+            carteAzioneEroe = carteAzioneEroe.filter(c => !carteSelezionateEroe.includes(c.id));
+            carteSelezionateEroe = [];
+
+            if (reliquieOttenute.length >= 4) {
+                triggerVictory();
                 return;
             }
 
-            let isHeroAttacking = (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI);
-            let isEnemyAttacking = (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI);
-
-            if ((hSuit === SUITS.SPADE && eSuit === SUITS.BASTONI) || (hSuit === SUITS.BASTONI && eSuit === SUITS.SPADE)) {
-                let heroDamageTaken = eVal;
-                let enemyDamageTaken = hVal;
-
-                hero.hp -= heroDamageTaken;
-                enemyHp = Math.max(0, enemyHp - enemyDamageTaken);
-
-                log(`Scontro frontale ${hSuit} vs ${eSuit}! L'Eroe subisce ${heroDamageTaken} danni e il Nemico subisce ${enemyDamageTaken} danni!`);
-                return;
-            }
-
-            if (hSuit === SUITS.BASTONI && eSuit === SUITS.BASTONI) {
-                let diff = hVal - eVal;
-                if (diff > 0) {
-                    enemyHp = Math.max(0, enemyHp - diff);
-                    log(`Parata perfetta con Bastoni! Contropiedi e infliggi ${diff} danni!`);
-                } else if (diff < 0) {
-                    hero.hp -= Math.abs(diff);
-                    log(`Il Nemico ti sopraffà con Bastoni e ti infligge ${Math.abs(diff)} danni!`);
-                } else {
-                    log('Parata reciproca con Bastoni! Nessun danno inflitto.');
-                }
-                return;
-            }
-
-            if (eSuit === SUITS.SPADE || eSuit === SUITS.BASTONI) {
-                let damageToHero = Math.max(0, eVal - (hSuit === SUITS.DENARI ? hVal : 0));
-                hero.hp -= damageToHero;
-                log(`L'attacco del Nemico (${eSuit}) ti infligge ${damageToHero} danni.`);
-            } else if (eSuit === SUITS.COPPE) {
-                enemyHp = Math.min(enemyMaxHp, enemyHp + eVal);
-                log(`Il Nemico gioca Coppe e si cura di ${eVal} HP. (HP Nemico: ${enemyHp}/${enemyMaxHp})`);
-            }
-
-            if (hSuit === SUITS.SPADE || hSuit === SUITS.BASTONI) {
-                let damageToEnemy = Math.max(0, hVal - (eSuit === SUITS.DENARI ? eVal : 0));
-                enemyHp = Math.max(0, enemyHp - damageToEnemy);
-                log(`Attacchi con ${hSuit} e infliggi ${damageToEnemy} danni al Nemico!`);
-            } else if (hSuit === SUITS.COPPE) {
-                hero.hp = Math.min(hero.maxHp, hero.hp + hVal);
-                log(`Giochi Coppe e ti curi di ${hVal} HP! (HP Eroe: ${hero.hp}/${hero.maxHp})`);
-            }
+            log('Combattimento terminato! Seleziona le carte azione rimanenti e tocca la Pila Eventi per scartarle, oppure tocca direttamente il Mazzo Dungeon per proseguire.');
+            updateUI();
         }
 
-        function checkCombatStatus() {
-            if (enemyHp <= 0) {
-                log(`=== NEMICO SCONFIGGITO! ===`);
-                nemiciSconfittiTotali++;
-
-                if (enemy.value === 10) {
-                    let relIndex = mazzoReliquie.findIndex(r => r.suit === enemy.suit);
-                    if (relIndex !== -1) {
-                        let rel = mazzoReliquie.splice(relIndex, 1)[0];
-                        reliquieOttenute.push(rel);
-                        log(`★ OTTENUTA LA RELIQUIA DI ${enemy.suit}! ★`);
-                        autoScrollContainer('slot-relics');
-                    }
-                    carteAiuto.push(enemy);
-                    log(`Il Re sconfitto diviene una Carta Aiuto!`);
-                    autoScrollContainer('slot-aids');
-                } else {
-                    carteAiuto.push(enemy);
-                    log(`Il nemico arruolato come Carta Aiuto.`);
-                    autoScrollContainer('slot-aids');
-                }
-
-                if (cartaEventoCorrente) {
-                    carteEventoPila.push(cartaEventoCorrente);
-                    cartaEventoCorrente = null;
-                }
-
-                inCombattimento = false;
-                enemy = null;
-
-                if (carteAzioneNemico.length > 0) {
-                    carteEventoPila.push(...carteAzioneNemico);
-                    carteAzioneNemico = [];
-                }
-
-                clearAllClashesToEvents();
-
-                if (checkWinCondition()) return;
-
-                fasePostCombattimento = true;
-                carteSelezionateEroe = [];
-                log(`VITTORIA! Se vuoi scartare carte azione Eroe, selezionale e tocca "Evento". Per proseguire senza scarti (o dopo lo scarto), tocca "Dungeon".`);
-                updateUI();
-                return;
+        function endTurn(discardEvent = true) {
+            if (discardEvent && cartaEventoCorrente) {
+                carteEventoPila.push(cartaEventoCorrente);
+                cartaEventoCorrente = null;
             }
 
-            if (carteAzioneNemico.length === 0) {
-                log('Round finito! Carte dello scontro scartate negli Eventi. Preparazione nuove carte azione...');
-                clearAllClashesToEvents();
-                setupCombatTurn();
-            } else {
-                updateUI();
-            }
+            inAttesaCorruzione = false;
+            canDrawEvent = true;
+            carteOroSelezionate = [];
+            carteAiutoSelezionate = [];
+            
+            updateUI();
         }
 
         function checkGameOver() {
             if (hero.hp <= 0) {
-                hero.hp = 0;
-                updateUI();
-                log('☠ SCONFITTA! Il tuo eroe è caduto.');
+                log('☠ IL TUO EROE È CADUTO! SCONFITTA! ☠');
                 document.getElementById('defeat-overlay').style.display = 'flex';
-                canDrawEvent = false;
-                setDiceEnabled(false);
                 return true;
             }
             return false;
         }
 
-        function checkWinCondition() {
-            let won = false;
-            if (mode === 'Facile' && reliquieOttenute.length >= 4) {
-                won = true;
-            } else if (mode === 'Difficile' && nemiciSconfittiTotali >= 11) {
-                won = true;
-            }
+        function triggerVictory() {
+            log('🏆 VITTORIA ASSOLUTA! HAI CONQUISTATO TUTTE LE 4 RELIQUIE! 🏆');
 
-            if (won) {
-                log('🏆 VITTORIA COMPLETA! Hai conquistato tutte le Reliquie!');
-                showVictoryOverlay();
-                canDrawEvent = false;
-                setDiceEnabled(false);
-                return true;
-            }
-            return false;
-        }
-
-        function showVictoryOverlay() {
-            let relicContainer = document.getElementById('victory-relics');
-            let kingContainer = document.getElementById('victory-kings');
-
-            relicContainer.innerHTML = '';
-            kingContainer.innerHTML = '';
-
-            reliquieOttenute.forEach(rel => {
-                relicContainer.innerHTML += renderCardHTML(rel);
+            let relicsContainer = document.getElementById('victory-relics');
+            relicsContainer.innerHTML = '';
+            reliquieOttenute.forEach(r => {
+                relicsContainer.innerHTML += renderCardHTML(r);
             });
 
-            let kingsInAid = carteAiuto.filter(c => c.value === 10);
-            let kingsInCatacomb = catacomba.filter(c => c.value === 10);
-            let allKings = [...kingsInAid, ...kingsInCatacomb];
-
-            allKings.forEach(king => {
-                kingContainer.innerHTML += renderCardHTML(king);
+            let kingsContainer = document.getElementById('victory-kings');
+            kingsContainer.innerHTML = '';
+            let kingsDefeated = catacomba.filter(c => c.value === 10);
+            kingsDefeated.forEach(k => {
+                kingsContainer.innerHTML += renderCardHTML(k);
             });
 
             document.getElementById('victory-overlay').style.display = 'flex';
-        }
-
-        function endTurn(keepEventInPile = true) {
-            if (!inCombattimento && !fasePostCombattimento) {
-                if (keepEventInPile && cartaEventoCorrente) {
-                    if (cartaEventoCorrente.suit === SUITS.DENARI) {
-                        carteOro.push(cartaEventoCorrente);
-                        autoScrollContainer('slot-gold');
-                    } else {
-                        carteEventoPila.push(cartaEventoCorrente);
-                    }
-                    cartaEventoCorrente = null;
-                }
-                clearAllClashesToEvents();
-                canDrawEvent = true;
-                setDiceEnabled(false);
-            }
-            updateUI();
         }
     </script>
 </body>
